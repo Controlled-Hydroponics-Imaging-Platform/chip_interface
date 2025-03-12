@@ -1,0 +1,14 @@
+{% block panel_content %}
+<div class="panel">
+    <!-- Settings Button inside Panel -->
+    <div class="settings-menu">
+        <div class="settings-btn">⋮</div>
+        <div class="settings-dropdown">
+            <a href="{{ url_for('configure', panel=panel_title) }}">⚙ Configuration</a>
+        </div>
+    </div>
+
+    <h2>{{ panel_title }}</h2>
+    <p>{{ panel_text }}</p>
+</div>
+{% endblock %}

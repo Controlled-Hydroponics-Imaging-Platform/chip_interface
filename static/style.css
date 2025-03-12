@@ -9,3 +9,57 @@ button {
     border: none;
     cursor: pointer;
 }
+/* Panel Styling */
+.panel {
+    position: relative; /* Ensures settings-menu is positioned inside */
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 5px;
+    background: #f9f9f9;
+    width: 300px; /* Adjust based on layout */
+}
+
+/* Settings Button (3 vertical dots) */
+.settings-menu {
+    position: absolute;
+    top: 10px;
+    right: 10px; /* Now correctly inside the panel */
+    cursor: pointer;
+}
+
+/* Make the 3-dot button larger */
+.settings-btn {
+    font-size: 20px;
+    padding: 5px;
+    user-select: none; /* Prevent text selection */
+}
+
+/* Dropdown Styling */
+.settings-dropdown {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    min-width: 150px;
+    z-index: 1000;
+}
+
+.settings-dropdown a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: black;
+}
+
+.settings-dropdown a:hover {
+    background: #f1f1f1;
+}
+
+/* Show dropdown on hover */
+.settings-menu:hover .settings-dropdown {
+    display: block;
+}

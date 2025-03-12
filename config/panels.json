@@ -1,0 +1,8 @@
+{
+    "NDS": {
+            "text": "Temperature Data"
+           },
+    "Spatial" : {
+                "text": "Humidity Data"
+                }
+}

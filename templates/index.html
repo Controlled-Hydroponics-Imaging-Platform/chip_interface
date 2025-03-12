@@ -1,14 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Flask Web Interface</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-</head>
-<body>
-    <h1>Flask Web Interface</h1>
-    <p id="sensor">Waiting for data...</p>
-    <button onclick="sendCommand()">Send Command</button>
-</body>
-</html>
+{% extends "layout.html" %}
+
+{% block title %}CHIP-Interface-Home{% endblock %}
+
+{% block content %}
+    <h2>Welcome to the Home Page</h2>
+    
+    <!-- Include the panel content -->
+    <!-- Loop over the panels and create multiple dynamically -->
+    {% for panel_name, panel_data in panels.items() %}
+        {% with panel_title=panel_name, panel_text=panel_data.text %}
+            {% include "panel.html" %}
+        {% endwith %}
+    {% endfor %}
+
+{% endblock %}
