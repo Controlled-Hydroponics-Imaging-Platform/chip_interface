@@ -13,26 +13,30 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 def load_config(config_file):
     config_path = os.path.join(app.root_path, "config", config_file)  # Correct path
-    with open(config_path, "r") as file:
-        return json.load(file)  # Load JSON as a dictionary
+    try:
+        with open(config_path, "r") as file:
+            return json.load(file)  # Load JSON as a dictionary
+    except json.JSONDecodeError as e:
+        print(f"🚨 JSON Error: {e}")
+        return {}
 
 
 # List of valid panels
 
-valid_panels = load_config("panels.json")
+enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)}
 
 # Connect to a serial device (comment this out if no hardware yet)
 # printer = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
 
 @app.route("/")
 def home():
-    return render_template("index.html",panels=valid_panels)
+    return render_template("index.html",panels=enabled_panels)
 
 @app.route("/configuration/<string:panel>")
 def configure(panel):
     # panel_titles = [p["title"] for p in valid_panels]
 
-    if panel not in valid_panels:
+    if panel not in enabled_panels:
         abort(404)
 
     return render_template("config.html", panel_name=panel)
@@ -53,8 +57,6 @@ def send_sensor_data():
 def handle_connect():
     print("Client connected")
     socketio.start_background_task(send_sensor_data)
-
-
 
 
 

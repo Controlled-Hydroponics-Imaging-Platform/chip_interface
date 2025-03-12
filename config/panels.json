@@ -1,8 +1,18 @@
 {
     "NDS": {
-            "text": "Temperature Data"
+            "text": "Temperature Data",
+            "enabled": true,
+            "refresh_rate": 5,
+            "sensor_type": "temperature",
+            "width": "300px",
+            "height": "150px"
            },
     "Spatial" : {
-                "text": "Humidity Data"
+                "text": "Humidity Data",
+                "enabled": true,
+                "refresh_rate": 10,
+                "sensor_type": "humidity",
+                "width": "400px",
+                "height": "200px"
                 }
 }
