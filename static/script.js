@@ -15,3 +15,34 @@ function sendCommand() {
     .then(data => alert("Command Sent: " + data.response));
 }
 
+// Serial port loader
+document.addEventListener("DOMContentLoaded", function() {
+    const serialDropdown = document.getElementById("serial_port");
+
+    function updateSerialPorts() {
+        fetch("/get_serial_ports")
+            .then(response => response.json())
+            .then(data => {
+                serialDropdown.innerHTML = ""; // Clear previous options
+                if (data.length === 0) {
+                    let option = document.createElement("option");
+                    option.text = "No serial devices found";
+                    serialDropdown.appendChild(option);
+                } else {
+                    data.forEach(port => {
+                        let option = document.createElement("option");
+                        option.value = port;
+                        option.text = port;
+                        serialDropdown.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching serial ports:", error));
+    }
+
+    // Auto-refresh every 5 seconds
+    setInterval(updateSerialPorts, 5000); 
+
+    // Run immediately when the page loads
+    updateSerialPorts();
+});

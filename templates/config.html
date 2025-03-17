@@ -3,5 +3,45 @@
 {% block title %} {{ panel_name }} configuration {% endblock %}
 
 {% block content %}
+
+
+
     <h2>configuration: {{ panel_name }}</h2>
+    <h4>loaded from: {{ config_file }}</h4>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('configure', panel=panel_name) }}" method="POST">
+
+        {% for key, setting in config_params.items() %}
+            <label for="{{ key }}">{{ setting["label"] }}:</label>
+            {% if setting["type"] == "dropdown" %}
+                <select name="{{ key }}" id="{{ key }}">
+                    {% for value in setting["values"] %}
+                        <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
+                            {{ value }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% elif setting["type"] == "number" %}
+                <input type="number" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+            {% elif setting["type"] == "text" %}
+                <input type="text" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+            {% endif %}
+            <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
+            <br>
+        {% endfor %}
+            
+
+
+        <button type="submit">Save Configuration</button>
+    </form>
+
+
 {% endblock %}

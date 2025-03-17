@@ -5,7 +5,8 @@
         "refresh_rate": 10,
         "sensor_type": "humidity",
         "width": "400px",
-        "height": "200px"
+        "height": "200px",
+        "config":"spatial.json"
         },
     "NDS": {
             "text": "Temperature Data",
@@ -13,7 +14,8 @@
             "refresh_rate": 5,
             "sensor_type": "temperature",
             "width": "300px",
-            "height": "150px"
+            "height": "150px",
+            "config": "nds_serial.json"
            }
 
 }

@@ -1,5 +1,25 @@
 {
-    "serial_port": "/dev/ttyUSB0",
-    "baud_rate": 115200,
-    "timeout": 1
+    "serial_port": {
+        "label": "Serial Port",
+        "type": "dropdown",
+        "values": [],
+        "set_to": "/dev/ttyS0"
+    },
+    "baud_rate": {
+        "label": "Baud Rate",
+        "type": "dropdown",
+        "values": [
+            9600,
+            19200,
+            38400,
+            57600,
+            115200
+        ],
+        "set_to": "9600"
+    },
+    "timeout": {
+        "label": "Timeout (seconds)",
+        "type": "number",
+        "set_to": "5"
+    }
 }
