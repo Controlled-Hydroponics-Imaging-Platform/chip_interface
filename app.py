@@ -23,7 +23,7 @@ def load_config(config_file):
 
 def get_serial_ports():
     ports = serial.tools.list_ports.comports()  # Get all serial ports
-    return [port.device for port in ports]  # Extract port names
+    return [{"device": port.device, "description": port.description} for port in ports]
 
 # API
 @app.route("/get_serial_ports")
@@ -32,15 +32,23 @@ def get_ports():
 
 
 # Web interface Routing
-enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)} # list of valid panels
 
 @app.route("/")
 def home():
+    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)} # list of valid panels
+
     return render_template("index.html",panels=enabled_panels)
+
+@app.route("/settings")
+def settings():
+    panels = load_config("panels.json")
+    return render_template("settings.html",panels=panels)
 
 @app.route("/configuration/<string:panel>", methods=["GET", "POST"])
 def configure(panel):
     # config_file = request.args.get("config_file")
+    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)} # list of valid panels
+
     if panel not in enabled_panels:
         abort(404)
 
@@ -50,8 +58,14 @@ def configure(panel):
     if request.method == "POST":
         # Process form submission
         new_config = config_params
-        for key in config_params.keys():
-            new_config[key]["set_to"] = request.form.get(key, "")
+        for key, params in config_params.items():
+            user_input = request.form.get(key, "")
+
+            if params["value_type"] == "number":
+                new_config[key]["set_to"] = int(user_input)
+            else:
+                new_config[key]["set_to"] = user_input
+
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:

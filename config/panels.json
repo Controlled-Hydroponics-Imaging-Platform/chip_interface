@@ -1,21 +1,18 @@
 {
     "Spatial" : {
-        "text": "Humidity Data",
+        "text": "Description of the spatial panel",
         "enabled": true,
-        "refresh_rate": 10,
-        "sensor_type": "humidity",
-        "width": "400px",
-        "height": "200px",
-        "config":"spatial.json"
+        "width": "800px",
+        "height": "500px",
+        "config":"spatial.json",
+        "template": "spatial.html"
         },
     "NDS": {
-            "text": "Temperature Data",
+            "text": "Description of the NDS Panel",
             "enabled": true,
-            "refresh_rate": 5,
-            "sensor_type": "temperature",
-            "width": "300px",
-            "height": "150px",
-            "config": "nds_serial.json"
+            "width": "400px",
+            "height": "800px",
+            "config": "nds_serial.json",
+            "template": "nds.html"
            }
-
 }

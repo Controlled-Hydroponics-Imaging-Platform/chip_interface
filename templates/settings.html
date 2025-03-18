@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %} Settings {% endblock %}
+
+{% block content %}
+
+<h2> Settings </h2>
+
+{% for key, setting in panels.items() %}
+
+<h3>{{ key }} Panel</h3>
+
+<form action="{{ url_for('settings') }}" method="POST">
+    <label for="Description">Description:</label>
+    <textarea name="text" id="Description" rows="3" cols="60">{{ setting["text"] }}</textarea>
+
+    <br>
+
+    <label for="Enabled">Enabled:</label>
+    <input type="checkbox" name="Enabled" id="Enabled" {% if setting.enabled %}checked{% endif %}>
+
+    <br>
+
+    <label for="width">width:</label>
+    <input type="text" name="width" id="width" value="{{ setting["width"] }}">
+
+    <br>
+
+    <label for="height">height:</label>
+    <input type="text" name="height" id="height" value="{{ setting["height"] }}"">
+
+    <br>
+
+    <label for="config">config:</label>
+    <input type="config" name="config" id="config" value="{{ setting["config"] }}"">
+
+    <br>
+
+
+    <label for="template">template:</label>
+    <input type="text" name="template" id="template" value="{{ setting["template"] }}"">
+
+    <br>
+
+
+    <button type="submit">Save Configuration</button>
+
+</form>
+
+{% endfor %}
+
+{% endblock %}

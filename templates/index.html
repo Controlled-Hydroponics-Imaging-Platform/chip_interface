@@ -5,12 +5,16 @@
 {% block content %}
     <h2>Welcome to the Home Page</h2>
     
+    <div class="panel-container">
+
     <!-- Include the panel content -->
     <!-- Loop over the panels and create multiple dynamically -->
     {% for panel_name, panel_data in panels.items() %}
-        {% with panel_title=panel_name, panel_text=panel_data.text, width=panel_data.width, height=panel_data.height  %}
+        {% with panel_title=panel_name, panel_text=panel_data.text, panel_width=panel_data.width, panel_height=panel_data.height, panel_template=panel_data.template  %}
             {% include "panel.html" %}
         {% endwith %}
     {% endfor %}
+
+    </div>
 
 {% endblock %}

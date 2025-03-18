@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const serialDropdown = document.getElementById("serial_port");
 
     function updateSerialPorts() {
+        const currentSelection = serialDropdown.value;
         fetch("/get_serial_ports")
             .then(response => response.json())
             .then(data => {
@@ -31,9 +32,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 } else {
                     data.forEach(port => {
                         let option = document.createElement("option");
-                        option.value = port;
-                        option.text = port;
+                        option.value = port.device;
+                        option.text = `${port.description === "n/a" ? "" : port.description} (${port.device})`;
+
+                        if (port.device === currentSelection) {
+                            option.selected = true;
+                        }
+
                         serialDropdown.appendChild(option);
+                        
                     });
                 }
             })

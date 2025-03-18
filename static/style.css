@@ -9,18 +9,28 @@ button {
     border: none;
     cursor: pointer;
 }
+/* Panel Container - Flexbox for Centering */
+.panel-container {
+    display: flex;  /* Align panels in a row */
+    justify-content: center;  /* Center horizontally */
+    align-items: flex-start;  /* Align items to the top (no vertical centering) */
+    flex-wrap: wrap;  /* Allow wrapping for small screens */
+    padding: 20px;
+}
+
 /* Panel Styling */
 .panel {
-    position: relative; /* Ensures settings-menu is positioned inside */
+    position: relative;
     border: 1px solid #ccc;
     padding: 15px;
-    margin: 10px;
+    margin: 10px; /* Adds spacing between panels */
     border-radius: 5px;
     background: #f9f9f9;
-    display: inline-block; /* Allow panels to sit side by side */
-    overflow: hidden;
+    display: inline-block; /* Keeps panels inline */
+    width: 300px; /* Adjust width */
+    min-height: 200px; /* Ensures a consistent height */
     
-    width: 300px; /* Adjust based on layout */
+    text-align: center; /* Centers text inside */
 }
 
 /* Settings Button (3 vertical dots) */
