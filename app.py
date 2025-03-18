@@ -35,24 +35,50 @@ def get_ports():
 
 @app.route("/")
 def home():
-    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)} # list of valid panels
+    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v["enabled"].get("set_to",False)} # list of valid panels
 
     return render_template("index.html",panels=enabled_panels)
 
-@app.route("/settings")
+@app.route("/settings", methods=["GET", "POST"])
 def settings():
     panels = load_config("panels.json")
+
+    if request.method == "POST":
+        new_settings = panels
+        panel_submitted = request.form.get('panel_name')
+
+        # Process form submission
+        for key, settings in panels[panel_submitted].items():
+            user_input = request.form.get(f"{panel_submitted}_{key}", "")
+            print(user_input)
+
+            if settings["value_type"] == "number":
+                new_settings[panel_submitted][key]["set_to"]  = int(user_input)
+            elif settings["value_type"] == "boolean":
+                new_settings[panel_submitted][key]["set_to"]  = True if user_input =="on" else False
+            else:
+                new_settings[panel_submitted][key]["set_to"] = user_input
+
+
+        # Save the updated config back to JSON
+        with open(os.path.join(app.root_path, "config", "panels.json"), "w") as file:
+            json.dump(new_settings, file, indent=4)
+
+        flash(f"{panel_submitted} panel settings saved successfully!", "success")
+        return redirect(url_for("settings"))
+
     return render_template("settings.html",panels=panels)
 
 @app.route("/configuration/<string:panel>", methods=["GET", "POST"])
 def configure(panel):
     # config_file = request.args.get("config_file")
-    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v.get("enabled",False)} # list of valid panels
+    enabled_panels = {k: v for k,v in load_config("panels.json").items() if v["enabled"].get("set_to",False)} # list of valid panels
+
 
     if panel not in enabled_panels:
         abort(404)
 
-    config_file=enabled_panels[panel]["config"]
+    config_file=enabled_panels[panel]["config"]["set_to"]
     config_params=load_config(config_file)
 
     if request.method == "POST":
@@ -71,7 +97,7 @@ def configure(panel):
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(new_config, file, indent=4)
 
-        flash("Configuration saved successfully!", "success")
+        flash(f"{panel} configuration saved successfully!", "success")
         return redirect(url_for("configure", panel=panel))
 
 

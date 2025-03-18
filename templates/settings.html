@@ -6,46 +6,41 @@
 
 <h2> Settings </h2>
 
-{% for key, setting in panels.items() %}
+{% for panel, settings in panels.items() %}
 
-<h3>{{ key }} Panel</h3>
+<h3>{{ panel }} Panel</h3>
 
 <form action="{{ url_for('settings') }}" method="POST">
-    <label for="Description">Description:</label>
-    <textarea name="text" id="Description" rows="3" cols="60">{{ setting["text"] }}</textarea>
+<input type="hidden" name="panel_name" value="{{ panel }}">
 
-    <br>
+{% for key, setting in settings.items() %}
 
-    <label for="Enabled">Enabled:</label>
-    <input type="checkbox" name="Enabled" id="Enabled" {% if setting.enabled %}checked{% endif %}>
+<label for="{{ panel }}_{{ key }}">{{ setting["label"] }}:</label>
+    {% if setting["type"] == "dropdown" %}
+        <select name="{{ panel }}_{{ key }}" id="{{ panel }}_{{ key }}">
+            {% for value in setting["values"] %}
+                <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
+                    {{ value }}
+                </option>
+            {% endfor %}
+        </select>
+    {% elif setting["type"] == "number" %}
+        <input type="number" name="{{ panel }}_{{ key }}" id="{{ panel }}_{{ key }}" value="{{ setting["set_to"] }}">
+    {% elif setting["type"] == "text" %}
+        <input type="text" name="{{ panel }}_{{ key }}" id="{{ panel }}_{{ key }}" value="{{ setting["set_to"] }}">
+    {% elif setting["type"] == "longtext" %}
+        <textarea name="{{ panel }}_{{ key }}" id="{{ panel }}_{{ key }}" rows="3" cols="60">{{ setting["set_to"] }}</textarea>
+    {% elif setting["type"] == "checkbox" %}
+        <input type="checkbox" name="{{ panel }}_{{ key }}" id="{{ panel }}_{{ key }}" {% if setting["set_to"] %}checked{% endif %}>
+    {% endif %}
+<!-- <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span> -->
+<br>
 
-    <br>
+{% endfor %}
 
-    <label for="width">width:</label>
-    <input type="text" name="width" id="width" value="{{ setting["width"] }}">
+<button type="submit">Save Configuration</button>
+</form> 
 
-    <br>
-
-    <label for="height">height:</label>
-    <input type="text" name="height" id="height" value="{{ setting["height"] }}"">
-
-    <br>
-
-    <label for="config">config:</label>
-    <input type="config" name="config" id="config" value="{{ setting["config"] }}"">
-
-    <br>
-
-
-    <label for="template">template:</label>
-    <input type="text" name="template" id="template" value="{{ setting["template"] }}"">
-
-    <br>
-
-
-    <button type="submit">Save Configuration</button>
-
-</form>
 
 {% endfor %}
 

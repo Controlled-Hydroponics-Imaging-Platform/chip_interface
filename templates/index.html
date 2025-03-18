@@ -10,7 +10,7 @@
     <!-- Include the panel content -->
     <!-- Loop over the panels and create multiple dynamically -->
     {% for panel_name, panel_data in panels.items() %}
-        {% with panel_title=panel_name, panel_text=panel_data.text, panel_width=panel_data.width, panel_height=panel_data.height, panel_template=panel_data.template  %}
+        {% with panel_title=panel_name, panel_text=panel_data["description"]["set_to"], panel_width=panel_data["width"]["set_to"], panel_height=panel_data["height"]["set_to"], panel_template=panel_data["template"]["set_to"]  %}
             {% include "panel.html" %}
         {% endwith %}
     {% endfor %}

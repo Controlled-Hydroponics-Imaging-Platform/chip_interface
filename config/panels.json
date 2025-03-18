@@ -1,18 +1,78 @@
 {
-    "Spatial" : {
-        "text": "Description of the spatial panel",
-        "enabled": true,
-        "width": "800px",
-        "height": "500px",
-        "config":"spatial.json",
-        "template": "spatial.html"
+    "Spatial": {
+        "description": {
+            "label": "description",
+            "type": "longtext",
+            "value_type": "text",
+            "set_to": "This is the new description of the spatial panel as a test"
         },
+        "enabled": {
+            "label": "enabled",
+            "type": "checkbox",
+            "value_type": "boolean",
+            "set_to": true
+        },
+        "width": {
+            "label": "width (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 800
+        },
+        "height": {
+            "label": "height (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 500
+        },
+        "config": {
+            "label": "config file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "spatial.json"
+        },
+        "template": {
+            "label": "template file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "spatial.html"
+        }
+    },
     "NDS": {
-            "text": "Description of the NDS Panel",
-            "enabled": true,
-            "width": "400px",
-            "height": "800px",
-            "config": "nds_serial.json",
-            "template": "nds.html"
-           }
+        "description": {
+            "label": "description",
+            "type": "longtext",
+            "value_type": "text",
+            "set_to": "Description of the spatial panel"
+        },
+        "enabled": {
+            "label": "enabled",
+            "type": "checkbox",
+            "value_type": "boolean",
+            "set_to": true
+        },
+        "width": {
+            "label": "width (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 400
+        },
+        "height": {
+            "label": "height (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 800
+        },
+        "config": {
+            "label": "config file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "nds_serial.json"
+        },
+        "template": {
+            "label": "template file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "nds.html"
+        }
+    }
 }

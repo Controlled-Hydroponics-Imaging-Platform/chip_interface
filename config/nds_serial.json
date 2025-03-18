@@ -4,7 +4,7 @@
         "type": "dropdown",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyS4"
+        "set_to": "/dev/ttyS0"
     },
     "baud_rate": {
         "label": "Baud Rate",
