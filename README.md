@@ -1,6 +1,9 @@
 # chip_interface
 
+Extendable and modular interface for controlled hydroponics platforms
+
 ## Structure
+
 /CHIP_INTERFACE
 │-- app.py  (Main Flask app)
 │-- /templates

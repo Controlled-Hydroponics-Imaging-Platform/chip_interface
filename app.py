@@ -6,11 +6,13 @@ import serial.tools.list_ports
 import time
 import json
 import os
-
+from plugins import load_all_plugins
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey" 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+
+load_all_plugins(app,socketio)
 
 def load_config(config_file):
     config_path = os.path.join(app.root_path, "config", config_file)  # Correct path
@@ -118,7 +120,7 @@ def send_sensor_data():
 @socketio.on("connect")
 def handle_connect():
     print("Client connected")
-    socketio.start_background_task(send_sensor_data)
+    # socketio.start_background_task(send_sensor_data)
 
 
 @app.errorhandler(400)
