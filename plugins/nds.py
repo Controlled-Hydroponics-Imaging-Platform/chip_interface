@@ -32,7 +32,7 @@ def start_sockets(socketio, app):
     port, baud_rate, timeout = config['serial_port']['set_to'], config['baud_rate']['set_to'], config['timeout']['set_to']
 
     def read_serial_nds():
-        ser = serial.Serial(port, baud_rate, timeout)
+        ser = serial.Serial(port=port, baudrate=baud_rate, timeout=timeout)
 
         while True:
             if ser.in_waiting > 0:
