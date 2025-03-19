@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey" 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
-load_all_plugins(app,socketio)
+script_list = load_all_plugins(app,socketio)
 
 def load_config(config_file):
     config_path = os.path.join(app.root_path, "config", config_file)  # Correct path
@@ -31,6 +31,10 @@ def get_serial_ports():
 @app.route("/get_serial_ports")
 def get_ports():
     return jsonify(get_serial_ports())  # Return JSON response
+
+@app.route("/plugin_scripts")
+def get_plugin_scripts():
+    return jsonify(script_list)  # Return JSON response
 
 
 # Web interface Routing

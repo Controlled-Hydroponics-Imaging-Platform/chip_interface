@@ -6,14 +6,13 @@ import os, json
 
 plugin_blueprint = Blueprint('nds',
                 __name__,
-                template_folder='templates',
-                static_folder='static',
                 url_prefix='/nds')
 
 panel_association = "NDS"
 
+scripts =["nds.js"]
 
-def start_sockets(socketio, app):
+def register_sockets(socketio, app):
 
 
     def load_config(config_file):

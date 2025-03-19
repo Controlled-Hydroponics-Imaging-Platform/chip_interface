@@ -4,7 +4,7 @@
         "type": "dropdown",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyS4"
+        "set_to": "/dev/ttyUSB0"
     },
     "baud_rate": {
         "label": "Baud Rate",
@@ -17,7 +17,7 @@
             57600,
             115200
         ],
-        "set_to": 38400
+        "set_to": 9600
     },
     "timeout": {
         "label": "Timeout (seconds)",

@@ -4,11 +4,6 @@ socket.on("connect", function() {
     console.log("Connected to WebSocket");
 });
 
-socket.on("sensor_update", function(data) {
-    console.log("Received Data:", data.value);  // Debugging output
-    document.getElementById("sensor").innerText = data.value;
-});
-
 function sendCommand() {
     fetch("/api/send_command", { method: "POST" })
     .then(response => response.json())
@@ -52,4 +47,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Run immediately when the page loads
     updateSerialPorts();
+});
+
+
+
+
+// Load plugin scripts
+document.addEventListener("DOMContentLoaded", () => {
+    fetch('/plugin_scripts')
+        .then(response => response.json())
+        .then(scripts => {
+        scripts.forEach(script => {
+            const tag = document.createElement('script');
+            tag.src = `/static/${script}`;
+            tag.async = false;  // Optional: preserves execution order if needed
+            tag.onload = () => {
+            console.log(`✅ Loaded: ${script}`);
+            };
+            tag.onerror = () => {
+            console.error(`❌ Failed to load: ${script}`);
+            };
+            document.body.appendChild(tag);
+        });
+        })
+        .catch(err => console.error("Failed to load plugins:", err));
+
+
 });
