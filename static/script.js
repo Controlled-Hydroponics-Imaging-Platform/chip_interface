@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const serialDropdown = document.getElementById("serial_port");
 
     function updateSerialPorts() {
+        if (!serialDropdown) {
+            console.warn("⚠️ serial_port dropdown not found");
+            return;
+        }
+
         const currentSelection = serialDropdown.value;
         fetch("/get_serial_ports")
             .then(response => response.json())

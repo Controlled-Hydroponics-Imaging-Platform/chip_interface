@@ -110,17 +110,6 @@ def configure(panel):
     return render_template("config.html", panel_name=panel, config_params=config_params, config_file=config_file)
 
 
-# Simulated function to send real-time data
-def send_sensor_data():
-    while True:
-        # Simulated sensor value (Replace with real serial data)
-        # printer.write(b'M105\n')  # Example G-code for temperature
-        # response = printer.readline().decode().strip()  # Read from serial
-        response = "Temperature: " + str(round(20 + (5 * time.time() % 5), 2))  # Fake data
-        
-        socketio.emit("sensor_update", {"value": response})  # Send data to frontend
-        eventlet.sleep(1)
-
 @socketio.on("connect")
 def handle_connect():
     print("Client connected")
