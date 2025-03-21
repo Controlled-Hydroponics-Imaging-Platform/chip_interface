@@ -43,10 +43,12 @@ def register_sockets(socketio, app):
     def read_serial_nds():
         while True:
             try:
+                socketio.emit("nds_status_update", {"status": "connecting", "device": port})
                 print("🔌 Attempting to connect to serial device...")
                 ser = serial.Serial(port=port, baudrate=baud_rate, timeout=timeout)
                 ser.reset_input_buffer()
                 print("✅ Serial connection established")
+                socketio.emit("nds_status_update", {"status": "connected", "device": port})
 
                 # Discard first few lines to sync
                 for _ in range(5):
@@ -74,20 +76,22 @@ def register_sockets(socketio, app):
 
                     except (serial.SerialException, OSError) as e:
                         print(f"❌ Serial read error: {e}")
+                        # socketio.emit("nds_status_update", {"status": "disconnected"})
                         break  # Breaks inner loop, triggers reconnect
 
             except (serial.SerialException, OSError) as e:
                 print(f"❌ Serial connection failed: {e}")
+                socketio.emit("nds_status_update", {"status": "disconnected", "device": port})
 
-            # Always try to close cleanly
-            try:
-                ser.close()
-                print("⚠️ Serial connection closed")
-            except:
-                pass
+                # Always try to close cleanly
+                try:
+                    ser.close()
+                    print("⚠️ Serial connection closed")
+                except:
+                    pass
 
-            print("🔄 Attempting to reconnect in 5 seconds...")
-            eventlet.sleep(5)  # Wait and try reconnect
+                print("🔄 Attempting to reconnect in 5 seconds...")
+                eventlet.sleep(5)  # Wait and try reconnect
 
     socketio.start_background_task(read_serial_nds)
 
