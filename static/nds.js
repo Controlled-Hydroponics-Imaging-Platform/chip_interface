@@ -1,5 +1,7 @@
 const sensorElem = document.getElementById("nds_sensors");
 const statusElem = document.getElementById("connection_status");
+const timestampElem = document.getElementById("last_updated");
+
 let reconnectInterval = null;
 
 
@@ -45,12 +47,16 @@ socket.on("nds_sensor_update", function(data) {
     sensorElem.innerHTML = "";
 
     // Loop through each key-value pair and display it
-    for (const [key, value] of Object.entries(data)) {
+    for (const [key, item] of Object.entries(data.data)) {
         const line = document.createElement('div');
         line.classList.add('sensor-item');
-        line.textContent = `${key}: ${value}`;
+        line.innerHTML = `<strong>${key}</strong>: ${item.value} ${item.unit}`;
         sensorElem.appendChild(line);
     }
+    const ts = document.createElement('div');
+    ts.classList.add('timestamp');
+    ts.innerHTML = `<strong>last updated</strong>: ${data.timestamp}`;
+    sensorElem.appendChild(ts);
 });
 
 

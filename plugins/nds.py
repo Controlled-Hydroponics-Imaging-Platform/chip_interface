@@ -1,8 +1,10 @@
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from flask_socketio import SocketIO
 import eventlet
 import serial
 import os, json
+from datetime import datetime
+strfmt= "%Y-%m-%d %H:%M:%S"
 
 plugin_blueprint = Blueprint('nds',
                 __name__,
@@ -12,17 +14,26 @@ panel_association = "NDS"
 
 scripts =["nds.js"]
 
+valid_sensors = ["Distance", "Water_Temp", "EC", "PH"]
+
+output_data = {}
+
 def process_nds_data(serial_output):
     data_dict = {}
     for item in serial_output.split(','):
         parts = item.strip().split(':', 1)
         if len(parts) == 2:
             key, value = parts
-            data_dict[key.strip()] = value.strip()
+            key,unit = key.rsplit('_',1) if '_' in key else (key, "")
+
+            if key not in valid_sensors:
+                print(f"{key} is not a valid sensor")
+            else:
+                data_dict[key.strip()]= {"value": value.strip(), "unit": unit.strip()}
+
         else:
             print(f"⚠️ Skipping malformed item: '{item}'")
     return data_dict
-
 
 def register_sockets(socketio, app):
 
@@ -41,6 +52,7 @@ def register_sockets(socketio, app):
     port, baud_rate, timeout = config['serial_port']['set_to'], config['baud_rate']['set_to'], config['timeout']['set_to']
 
     def read_serial_nds():
+        global output_data
         while True:
             try:
                 socketio.emit("nds_status_update", {"status": "connecting", "device": port})
@@ -66,11 +78,12 @@ def register_sockets(socketio, app):
                             while ser.in_waiting:
                                 raw_data = ser.readline().decode('utf-8', errors='ignore').strip() #This loop clears the buffered data to get the latest value instead of displaying the next backlogged 
                             
-                            if not raw_data or 'Distance_mm' not in raw_data:
+                            if not raw_data:
                                 print(f"⚠️ Skipping bad data: {raw_data}")
                                 continue
                             processed_data = process_nds_data(raw_data)
-                            socketio.emit("nds_sensor_update", processed_data)
+                            output_data = {"data":processed_data, "timestamp": datetime.now().strftime(strfmt) }
+                            socketio.emit("nds_sensor_update", output_data )
 
                         eventlet.sleep(3) # 3 seems to be a good delay for proper buffering
 
@@ -94,6 +107,13 @@ def register_sockets(socketio, app):
                 eventlet.sleep(5)  # Wait and try reconnect
 
     socketio.start_background_task(read_serial_nds)
+
+
+
+# API
+@plugin_blueprint.route("/processed_data")
+def get_data():
+    return jsonify(output_data)  # Return JSON response
 
 
 @plugin_blueprint.route('/hello')
