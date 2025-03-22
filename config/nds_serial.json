@@ -1,7 +1,7 @@
 {
     "serial_port": {
         "label": "Serial Port",
-        "type": "dropdown",
+        "type": "serial_port",
         "value_type": "text",
         "values": [],
         "set_to": "/dev/ttyUSB0"
@@ -24,5 +24,19 @@
         "type": "number",
         "value_type": "number",
         "set_to": 1
+    },
+    "pump": {
+        "label": "Resv. Pump IP",
+        "type": "kasa_plug",
+        "value_type": "text",
+        "values": [],
+        "set_to": "192.168.2.70"
+    },
+    "Light": {
+        "label": "LED IP",
+        "type": "kasa_plug",
+        "value_type": "text",
+        "values": [],
+        "set_to": "192.168.2.70"
     }
 }

@@ -12,47 +12,48 @@ function sendCommand() {
 
 // Serial port loader
 document.addEventListener("DOMContentLoaded", function() {
-    const serialDropdown = document.getElementById("serial_port");
 
-    function updateSerialPorts() {
-        if (!serialDropdown) {
-            console.warn("⚠️ serial_port dropdown not found");
-            return;
-        }
-
-        const currentSelection = serialDropdown.value;
+    function updateSerialPortsFor(selectElement) {
+        const currentSelection = selectElement.value;
         fetch("/get_serial_ports")
             .then(response => response.json())
             .then(data => {
-                serialDropdown.innerHTML = ""; // Clear previous options
+                selectElement.innerHTML = ""; // Clear previous options
                 if (data.length === 0) {
                     let option = document.createElement("option");
                     option.text = "No serial devices found";
-                    serialDropdown.appendChild(option);
+                    selectElement.appendChild(option);
                 } else {
                     data.forEach(port => {
                         let option = document.createElement("option");
                         option.value = port.device;
                         option.text = `${port.description === "n/a" ? "" : port.description} (${port.device})`;
-
                         if (port.device === currentSelection) {
                             option.selected = true;
                         }
-
-                        serialDropdown.appendChild(option);
-                        
+                        selectElement.appendChild(option);
                     });
                 }
             })
             .catch(error => console.error("Error fetching serial ports:", error));
     }
 
-    // Auto-refresh every 5 seconds
-    setInterval(updateSerialPorts, 5000); 
+    // Attach click event to all refresh buttons
+    document.querySelectorAll(".refresh_serial").forEach(button => {
+        button.addEventListener("click", function() {
+            const select = this.closest('.serial-group').querySelector('.serial_port');
+            console.log("🔄 Refreshing serial ports for:", select);
+            updateSerialPortsFor(select);
+        });
+    });
 
-    // Run immediately when the page loads
-    updateSerialPorts();
+    // Optional: Initial load of all dropdowns
+    document.querySelectorAll(".serial_port").forEach(select => {
+        updateSerialPortsFor(select);
+    });
+
 });
+
 
 
 
@@ -62,20 +63,26 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch('/plugin_scripts')
         .then(response => response.json())
         .then(scripts => {
-        scripts.forEach(script => {
-            const tag = document.createElement('script');
-            tag.src = `/static/${script}`;
-            tag.async = false;  // Optional: preserves execution order if needed
-            tag.onload = () => {
-            console.log(`✅ Loaded: ${script}`);
-            };
-            tag.onerror = () => {
-            console.error(`❌ Failed to load: ${script}`);
-            };
-            document.body.appendChild(tag);
-        });
+            const loadPromises = scripts.map(script => new Promise((resolve, reject) => {
+                const tag = document.createElement('script');
+                tag.src = `/static/${script}`;
+                tag.onload = () => {
+                    console.log(`✅ Loaded: ${script}`);
+                    resolve();
+                };
+                tag.onerror = () => reject(`❌ Failed to load: ${script}`);
+                document.body.appendChild(tag);
+            }));
+
+            Promise.all(loadPromises).then(() => {
+                console.log("✅ All plugins loaded, initializing...");
+                if (window.pluginRegistry) {
+                    window.pluginRegistry.forEach(plugin => {
+                        console.log(`🛠️ Initializing plugin: ${plugin.name}`);
+                        if (typeof plugin.init === "function") plugin.init();
+                    });
+                }
+            }).catch(err => console.error(err));
         })
         .catch(err => console.error("Failed to load plugins:", err));
-
-
 });

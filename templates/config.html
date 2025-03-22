@@ -19,6 +19,31 @@
                         </option>
                     {% endfor %}
                 </select>
+            {% elif setting["type"] == "serial_port" %}
+                <div class="serial-group">
+                    <select name="{{ key }}" id="{{ key }}" class="serial_port">
+
+                        {% for value in setting["values"] %}
+                            <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
+                                {{ value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button"  class="refresh_serial" style="margin-left: 5px;">🔄</button>
+                </div>
+
+            {% elif setting["type"] == "kasa_plug" %} <!-- kasa_plug plugin -->
+                <div class="kasa-plug-group">
+                    <select name="{{ key }}" id="{{ key }}" class="kasa_plug">
+
+                        {% for value in setting["values"] %}
+                            <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
+                                {{ value }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="button"  class="refresh_kasa_plug" style="margin-left: 5px;">🔄</button>
+                </div>
             {% elif setting["type"] == "number" %}
                 <input type="number" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
             {% elif setting["type"] == "text" %}
