@@ -16,6 +16,15 @@
     text-align: center;
   }
 
+  #nds_controls {
+    background: #f0f0f0;
+    padding: 1em;
+    border-radius: 8px;
+    width: fit-content;
+    font-family: monospace;
+    margin: 0 auto;  /* Center horizontally */
+    text-align: left;    
+  }
 
   #connection_status {
     font-weight: bold;
@@ -32,4 +41,22 @@
 </style>
 
 <div id="connection_status"></div>
+<h3>Monitor</h3>
 <div id="nds_sensors">Waiting for data...</div>
+<br>
+
+
+<h3>Controls</h3>
+<div id="nds_controls">
+  {% for key, params in panel_config.items() %}
+    {% if params["type"] == "kasa_plug" %}
+      
+      <div class="kasa-plug-control">
+        {{ params["label"] }} 
+        <button class="kasa-toggle-plug" data-ip="{{ params["set_to"] }}">Toggle</button> <span>({{ params["type"] }})</span>
+      </div>
+
+
+    {% endif %}
+  {% endfor %}
+</div>

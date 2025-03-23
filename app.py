@@ -42,8 +42,13 @@ def get_plugin_scripts():
 @app.route("/")
 def home():
     enabled_panels = {k: v for k,v in load_config("panels.json").items() if v["enabled"].get("set_to",False)} # list of valid panels
+    config_params={}
 
-    return render_template("index.html",panels=enabled_panels)
+    for panel, params in enabled_panels.items():
+        config_params[panel]= load_config(params["config"]["set_to"])
+        
+
+    return render_template("index.html",panels=enabled_panels, config_params = config_params)
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():

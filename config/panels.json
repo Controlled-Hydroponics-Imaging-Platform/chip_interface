@@ -42,7 +42,7 @@
             "label": "description",
             "type": "longtext",
             "value_type": "text",
-            "set_to": "Description of the spatial panel"
+            "set_to": ""
         },
         "enabled": {
             "label": "enabled",

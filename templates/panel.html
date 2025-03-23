@@ -9,7 +9,8 @@
 
     <h2>{{ panel_title }}</h2>
     <p>{{ panel_text }}</p>
-
-    {% include panel_template %}
+    {% with panel_config = panel_config  %}
+        {% include panel_template %}
+    {% endwith %}
 
 </div>

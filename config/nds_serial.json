@@ -26,17 +26,17 @@
         "set_to": 1
     },
     "pump": {
-        "label": "Resv. Pump IP",
+        "label": "Resv. Pump",
         "type": "kasa_plug",
         "value_type": "text",
-        "values": [],
+        "values": [""],
         "set_to": "192.168.2.70"
     },
     "Light": {
-        "label": "LED IP",
+        "label": "LED",
         "type": "kasa_plug",
         "value_type": "text",
-        "values": [],
+        "values": [""],
         "set_to": "192.168.2.70"
     }
 }
