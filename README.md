@@ -2,6 +2,10 @@
 
 Extendable and modular interface for controlled hydroponics platforms
 
+## Features
+- Serial communication 
+- Kasa smart plug integrations
+
 ## Structure
 
 /CHIP_INTERFACE
