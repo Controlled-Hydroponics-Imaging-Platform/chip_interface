@@ -36,20 +36,10 @@
         "schedule": [
             {
                 "days": [
-                    "Monday",
-                    "Wednesday",
-                    "Friday"
+                    "Monday"
                 ],
                 "start": "17:20",
                 "end": "12:20"
-            },
-            {
-                "days": [
-                    "Tuesday",
-                    "Thursday"
-                ],
-                "start": "23:23",
-                "end": "23:26"
             }
         ],
         "auto_enabled": true
@@ -61,8 +51,8 @@
         "values": [
             ""
         ],
-        "set_to": "192.168.2.70",
+        "set_to": "",
         "schedule": "",
-        "auto_enabled": true
+        "auto_enabled": false
     }
 }

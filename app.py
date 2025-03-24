@@ -176,14 +176,6 @@ def set_schedule(config_file, key):
 
     return render_template("scheduler.html", config_file=config_file, key=key, params=params)
 
-def configure_schedule(control_device):
-    pass
-
-
-
-
-
-
 
 
 @socketio.on("connect")
