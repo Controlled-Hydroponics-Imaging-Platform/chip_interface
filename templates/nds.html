@@ -1,5 +1,5 @@
 <style>
-  #nds_sensors {
+  .sensor-container {
     background: #f0f0f0;
     padding: 1em;
     border-radius: 8px;
@@ -8,9 +8,11 @@
     margin: 0 auto;  /* Center horizontally */
     text-align: left;    
   }
+
   .sensor-line {
     margin: 5px 0;
   }
+
   .timestamp {
     margin: 5px 0;
     text-align: center;
@@ -26,24 +28,32 @@
     text-align: left;    
   }
 
-  #connection_status {
+  .connection_status {
     font-weight: bold;
     transition: color 0.3s ease;
-}
+  }
 
-.connected {
+  .connected {
     color: green;
-}
+  }
 
-.disconnected {
+  .disconnected {
     color: orange;
-}
+  }
 </style>
 
-
 <h3>Monitor</h3>
-<div id="connection_status"></div>
-<div id="nds_sensors">Waiting for data...</div>
+
+{% for key, params in panel_config.items() %}
+  {% if params["type"] == "serial_port" and params["set_to"] != "" %}
+    <span>{{ params["label"]}}</span>
+      <br>
+    <div id="{{ key }}_status"></div>
+    <div id="{{ key }}_sensors" class="sensor-container">Waiting for data...</div>
+
+  {% endif %}
+{% endfor %}
+
 <br>
 
 

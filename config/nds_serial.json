@@ -1,29 +1,12 @@
 {
-    "serial_port": {
-        "label": "Serial Port",
+    "nds": {
+        "label": "Nutrient Resv.",
         "type": "serial_port",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyUSB0"
-    },
-    "baud_rate": {
-        "label": "Baud Rate",
-        "type": "dropdown",
-        "value_type": "number",
-        "values": [
-            9600,
-            19200,
-            38400,
-            57600,
-            115200
-        ],
-        "set_to": 9600
-    },
-    "timeout": {
-        "label": "Timeout (seconds)",
-        "type": "number",
-        "value_type": "number",
-        "set_to": 1
+        "set_to": "/dev/ttyUSB0",
+        "baud_rate": 9600,
+        "timeout": 1
     },
     "pump": {
         "label": "Resv. Pump",

@@ -6,7 +6,9 @@ import serial.tools.list_ports
 import time
 import json
 import os
-from plugins import load_all_plugins
+from plugins import load_all_plugins, reload_plugins
+from datetime import datetime
+strfmt= "%Y-%m-%d %H:%M:%S"
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey" 
@@ -38,9 +40,6 @@ def get_serial_ports():
 @app.route("/plugin_scripts")
 def get_plugin_scripts():
     return jsonify(script_list)  # Return JSON response
-
-
-
 
 # Web interface Routing
 
@@ -110,13 +109,15 @@ def configure(panel):
 
             if params["type"] == "kasa_plug":
                 new_config[key]["auto_enabled"]=  True if request.form.get(f"{key}_auto") =="on" else False 
-
-
+            elif params["type"] == "serial_port":
+                new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
+                new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(new_config, file, indent=4)
 
+        reload_plugins(app,socketio)
         flash(f"{panel} configuration saved successfully!", "success")
         return redirect(url_for("configure", panel=panel))
 
@@ -176,7 +177,7 @@ def set_schedule(config_file, key):
 
     return render_template("scheduler.html", config_file=config_file, key=key, params=params)
 
-
+# Socket behavior
 
 @socketio.on("connect")
 def handle_connect():

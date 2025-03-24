@@ -29,6 +29,15 @@
                         {% endfor %}
                     </select>
                     <button type="button"  class="refresh_serial" style="margin-left: 5px;">🔄</button>
+                    <br>
+                    <span>baud rate: </span>
+                    <select name="{{ key }}_baudrate" id="{{ key }}_baudrate">
+                            <option value="9600" {% if setting["baud_rate"] == 9600 %}selected{% endif %}>9600</option>
+                            <option value="57600" {% if setting["baud_rate"] == 57600 %}selected{% endif %}>57600</option>
+                            <option value="115200" {% if setting["baud_rate"] == 115200 %}selected{% endif %}>115200</option>
+                    </select>
+                    <br>
+                    <span>timeout: </span><input type="number" name="{{ key }}_timeout" id="{{ key }}_timeout" value="{{ setting["timeout"] }}">
 
                 </div>
 
