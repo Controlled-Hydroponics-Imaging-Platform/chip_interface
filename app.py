@@ -23,18 +23,23 @@ def load_config(config_file):
         print(f"🚨 JSON Error: {e}")
         return {}
 
-def get_serial_ports():
-    ports = serial.tools.list_ports.comports()  # Get all serial ports
-    return [{"device": port.device, "description": port.description} for port in ports]
 
 # API
 @app.route("/get_serial_ports")
 def get_ports():
     return jsonify(get_serial_ports())  # Return JSON response
 
+def get_serial_ports():
+    ports = serial.tools.list_ports.comports()  # Get all serial ports
+    return [{"device": port.device, "description": port.description} for port in ports]
+
+
+
 @app.route("/plugin_scripts")
 def get_plugin_scripts():
     return jsonify(script_list)  # Return JSON response
+
+
 
 
 # Web interface Routing
@@ -103,6 +108,10 @@ def configure(panel):
             else:
                 new_config[key]["set_to"] = user_input
 
+            if params["type"] == "kasa_plug":
+                new_config[key]["auto_enabled"]=  True if request.form.get(f"{key}_auto") =="on" else False 
+
+
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
@@ -113,6 +122,68 @@ def configure(panel):
 
 
     return render_template("config.html", panel_name=panel, config_params=config_params, config_file=config_file)
+
+
+@app.route("/scheduler/<string:config_file>/<string:key>", methods=["GET", "POST"])
+def set_schedule(config_file, key):
+
+    config_data=load_config(config_file)
+
+    if key not in config_data:
+        abort(404, "Invalid configuration key")
+
+    params=config_data[key]
+
+
+    if request.method == "POST":
+        # Parse the form data to rebuild the schedule
+        schedule = []
+        index = 0
+
+        # Loop until no more start_time_N keys
+        while True:
+            start_time = request.form.get(f"start_time_{index}")
+            end_time = request.form.get(f"end_time_{index}")
+            if not start_time or not end_time:
+                break  # No more entries
+
+            # Collect all checked days for this block
+            days = []
+            for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
+                day_checkbox = request.form.getlist(f"days_{index}")
+                if day in day_checkbox:
+                    days.append(day)
+
+            schedule.append({
+                "days": days,
+                "start": start_time,
+                "end": end_time
+            })
+
+            index += 1
+
+        # Save the updated schedule back into the config
+        params["schedule"] = schedule
+        config_data[key] = params
+
+        with open(os.path.join(app.root_path, "config", config_file), "w") as file:
+            json.dump(config_data, file, indent=4)
+
+        flash("Schedule saved successfully!", "success")
+        return redirect(url_for('set_schedule', config_file=config_file, key=key))
+
+
+
+    return render_template("scheduler.html", config_file=config_file, key=key, params=params)
+
+def configure_schedule(control_device):
+    pass
+
+
+
+
+
+
 
 
 @socketio.on("connect")

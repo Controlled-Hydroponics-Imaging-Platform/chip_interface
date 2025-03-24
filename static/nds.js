@@ -47,7 +47,7 @@ window.pluginRegistry.push({
                 statusElem?.classList.add('connected');
                 statusElem.innerHTML = `* Device Connected${portInfo}`;
 
-                // Optional: Clear the status message after 10 seconds
+                // Clear the status message after 10 seconds
                 setTimeout(() => {
                     statusElem.innerText = "";
                     statusElem.classList.remove('connected', 'disconnected');

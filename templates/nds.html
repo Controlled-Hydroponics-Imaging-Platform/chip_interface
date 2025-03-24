@@ -40,8 +40,9 @@
 }
 </style>
 
-<div id="connection_status"></div>
+
 <h3>Monitor</h3>
+<div id="connection_status"></div>
 <div id="nds_sensors">Waiting for data...</div>
 <br>
 
@@ -49,12 +50,17 @@
 <h3>Controls</h3>
 <div id="nds_controls">
   {% for key, params in panel_config.items() %}
-    {% if params["type"] == "kasa_plug" %}
+    {% if params["type"] == "kasa_plug" and params["set_to"] != "" %}
       
       <div class="kasa-plug-control">
-        {{ params["label"] }} 
-        <button class="kasa-toggle-plug" data-ip="{{ params["set_to"] }}">Toggle</button> <span>({{ params["type"] }})</span>
+        {{ params["label"] }} <span>({{ params["type"] }})</span>
+        <br>
+        
+        <button class="kasa-toggle-plug" data-ip="{{ params["set_to"] }}">Toggle</button> 
+        {% if params["auto_enabled"] %} <span><strong>(Auto mode)</strong></span> {% endif %}
       </div>
+
+      <br>
 
 
     {% endif %}

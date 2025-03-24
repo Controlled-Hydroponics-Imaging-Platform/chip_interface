@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %} Schedule for {{ config_file }}: {{ key }} {% endblock %}
+
+{% block content %}
+<h2>Set Schedule for {{ config_file }}: {{ params["label"] }}</h2>
+
+<form action="{{ url_for('set_schedule', config_file=config_file, key=key) }}" method="POST" id="scheduleForm">
+    <div id="scheduleEntries">
+        {% if params["schedule"] %}
+            {% for entry in params["schedule"] %}
+                <div class="schedule-entry">
+                    <label>Select Days:</label><br>
+                    {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                        <input type="checkbox" name="days_{{ loop.index0 }}" value="{{ day }}"
+                               {% if day in entry.days %}checked{% endif %}>
+                        <label>{{ day }}</label>
+                    {% endfor %}
+
+                    <br>
+                    <label>Start Time:</label>
+                    <input type="time" name="start_time_{{ loop.index0 }}" value="{{ entry.start }}" required>
+
+                    <label>End Time:</label>
+                    <input type="time" name="end_time_{{ loop.index0 }}" value="{{ entry.end }}" required>
+
+                    <button type="button" class="remove-entry">❌ Remove</button>
+                    <hr>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Render one empty block if no schedule exists -->
+            <div class="schedule-entry">
+                <label>Select Days:</label><br>
+                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                    <input type="checkbox" name="days_0" value="{{ day }}">
+                    <label>{{ day }}</label>
+                {% endfor %}
+
+                <br>
+                <label>Start Time:</label>
+                <input type="time" name="start_time_0" required>
+
+                <label>End Time:</label>
+                <input type="time" name="end_time_0" required>
+
+                <button type="button" class="remove-entry">❌ Remove</button>
+                <hr>
+            </div>
+        {% endif %}
+    </div>
+
+    <button type="button" id="addEntry">➕ Add Another Time Block</button>
+
+    <div style="margin-top: 20px;">
+        <button type="submit">Save Schedule</button>
+    </div>
+</form>
+
+<script>
+// Handle dynamic adding/removing of schedule entries
+document.addEventListener("DOMContentLoaded", function() {
+    let entryCount = {{ params["schedule"]|length if params["schedule"] else 1 }};
+    const scheduleContainer = document.getElementById("scheduleEntries");
+    const addBtn = document.getElementById("addEntry");
+
+    addBtn.addEventListener("click", function() {
+        const newEntry = scheduleContainer.children[0].cloneNode(true);
+
+        // Clear the inputs and update names
+        newEntry.querySelectorAll("input").forEach(input => {
+            if (input.type === "checkbox") {
+                input.name = `days_${entryCount}`;
+                input.checked = false;
+            }
+            if (input.type === "time") {
+                if (input.name.includes("start_time")) input.name = `start_time_${entryCount}`;
+                if (input.name.includes("end_time")) input.name = `end_time_${entryCount}`;
+                input.value = "";
+            }
+        });
+
+        scheduleContainer.appendChild(newEntry);
+        entryCount++;
+    });
+
+    // Remove a schedule entry
+    scheduleContainer.addEventListener("click", function(e) {
+        if (e.target.classList.contains("remove-entry") && scheduleContainer.children.length > 1) {
+            e.target.closest(".schedule-entry").remove();
+        }
+    });
+});
+</script>
+
+<style>
+.schedule-entry {
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

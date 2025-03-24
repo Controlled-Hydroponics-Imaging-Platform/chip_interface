@@ -21,8 +21,7 @@
                 </select>
             {% elif setting["type"] == "serial_port" %}
                 <div class="serial-group">
-                    <select name="{{ key }}" id="{{ key }}" class="serial_port">
-
+                    <select class="serial_port" name="{{ key }}" id="{{ key }}">
                         {% for value in setting["values"] %}
                             <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
                                 {{ value }}
@@ -30,6 +29,7 @@
                         {% endfor %}
                     </select>
                     <button type="button"  class="refresh_serial" style="margin-left: 5px;">🔄</button>
+
                 </div>
 
             {% elif setting["type"] == "kasa_plug" %} <!-- kasa_plug plugin -->
@@ -43,6 +43,12 @@
                         {% endfor %}
                     </select>
                     <button type="button"  class="refresh_kasa_plug" style="margin-left: 5px;">🔄</button>
+                    
+                    <button type="button" class="set_schedule"
+                        onclick="window.location.href='{{ url_for('set_schedule', config_file=config_file, key=key) }}'"
+                        style="margin-left: 5px;">Set Schedule</button>
+                    
+                    <input type="checkbox" name="{{ key }}_auto" id="{{ key }}_auto" {% if setting["auto_enabled"] %}checked{% endif %}><span>auto mode</span> 
                 </div>
             {% elif setting["type"] == "number" %}
                 <input type="number" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
