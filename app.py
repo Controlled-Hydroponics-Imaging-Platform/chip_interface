@@ -112,6 +112,8 @@ def configure(panel):
             elif params["type"] == "serial_port":
                 new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
                 new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
+                new_config[key]["poll_rate"]=  int(request.form.get(f"{key}_poll"))
+
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:

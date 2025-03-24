@@ -21,6 +21,7 @@
                 </select>
             {% elif setting["type"] == "serial_port" %}
                 <div class="serial-group">
+                    <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
                     <select class="serial_port" name="{{ key }}" id="{{ key }}">
                         {% for value in setting["values"] %}
                             <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
@@ -38,11 +39,15 @@
                     </select>
                     <br>
                     <span>timeout: </span><input type="number" name="{{ key }}_timeout" id="{{ key }}_timeout" value="{{ setting["timeout"] }}">
+                    <br>
+                    <span>polling rate: </span><input type="number" name="{{ key }}_poll" id="{{ key }}_poll" value="{{ setting["poll_rate"] }}">
+
 
                 </div>
 
             {% elif setting["type"] == "kasa_plug" %} <!-- kasa_plug plugin -->
                 <div class="kasa-plug-group">
+                    <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
                     <select name="{{ key }}" id="{{ key }}" class="kasa_plug">
 
                         {% for value in setting["values"] %}
@@ -64,7 +69,7 @@
             {% elif setting["type"] == "text" %}
                 <input type="text" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
             {% endif %}
-            <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
+            
             <br>
         {% endfor %}
             

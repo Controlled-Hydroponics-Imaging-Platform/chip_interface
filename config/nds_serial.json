@@ -6,7 +6,8 @@
         "values": [],
         "set_to": "/dev/ttyUSB0",
         "baud_rate": 9600,
-        "timeout": 1
+        "timeout": 1,
+        "poll_rate": 3
     },
     "pump": {
         "label": "Resv. Pump",
