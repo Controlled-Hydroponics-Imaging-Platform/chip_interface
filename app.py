@@ -16,10 +16,10 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 script_list = load_all_plugins(app,socketio)
 
-def restart_program():
-    print("🔄 Restarting app...")
-    python = sys.executable  # Path to the Python interpreter
-    os.execv(python, [python] + sys.argv)  # Re-run the same script with the same args
+# def restart_program():
+#     print("🔄 Restarting...")
+#     subprocess.Popen([sys.executable] + sys.argv)
+#     os._exit(0)
 
 
 def load_config(config_file):
@@ -126,7 +126,7 @@ def configure(panel):
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(new_config, file, indent=4)
 
-        restart_program()
+        reload_plugins(app,socketio)
         flash(f"{panel} configuration saved successfully!", "success")
         return redirect(url_for("configure", panel=panel))
 
@@ -158,18 +158,14 @@ def set_schedule(config_file, key):
                 break  # No more entries
 
             # Collect all checked days for this block
-            days = []
-            for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
-                day_checkbox = request.form.getlist(f"days_{index}")
-                if day in day_checkbox:
-                    days.append(day)
+            selected_days = request.form.getlist(f"days_{index}")
 
             schedule.append({
-                "days": days,
+                "days": selected_days,
                 "start": start_time,
                 "end": end_time
             })
-
+            
             index += 1
 
         # Save the updated schedule back into the config
@@ -179,7 +175,8 @@ def set_schedule(config_file, key):
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(config_data, file, indent=4)
 
-        restart_program()
+        reload_plugins(app,socketio)
+        
         
         flash("Schedule saved successfully!", "success")
         return redirect(url_for('set_schedule', config_file=config_file, key=key))
@@ -205,4 +202,4 @@ def page_not_found(error):
     return render_template("404.html"), 404
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False, use_reloader=False)

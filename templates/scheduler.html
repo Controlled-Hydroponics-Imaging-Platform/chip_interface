@@ -9,21 +9,22 @@
     <div id="scheduleEntries">
         {% if params["schedule"] %}
             {% for entry in params["schedule"] %}
+                {% set entry_index = loop.index0 %}
                 <div class="schedule-entry">
                     <label>Select Days:</label><br>
                     {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
-                        <input type="checkbox" name="days_{{ loop.index0 }}" value="{{ day }}"
-                               {% if day in entry.days %}checked{% endif %}>
+                        <input type="checkbox" name="days_{{ entry_index }}" value="{{ day }}"
+                            {% if day in entry.days %}checked{% endif %}>
                         <label>{{ day }}</label>
                     {% endfor %}
-
+            
                     <br>
                     <label>Start Time:</label>
-                    <input type="time" name="start_time_{{ loop.index0 }}" value="{{ entry.start }}" required>
-
+                    <input type="time" name="start_time_{{ entry_index }}" value="{{ entry.start }}" required>
+            
                     <label>End Time:</label>
-                    <input type="time" name="end_time_{{ loop.index0 }}" value="{{ entry.end }}" required>
-
+                    <input type="time" name="end_time_{{ entry_index }}" value="{{ entry.end }}" required>
+            
                     <button type="button" class="remove-entry">❌ Remove</button>
                     <hr>
                 </div>

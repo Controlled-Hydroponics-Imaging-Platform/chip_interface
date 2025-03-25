@@ -40,6 +40,29 @@
   .disconnected {
     color: orange;
   }
+
+  .kasa-toggle-plug:hover {
+      opacity: 0.85;
+  }
+  
+  .kasa-toggle-plug.on {
+    background-color: #4CAF50;   /* Green */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+  }
+
+  .kasa-toggle-plug.off {
+      background-color: #f44336;   /* Red */
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+  }
+
+
+
 </style>
 
 <h3>Monitor</h3>
@@ -62,12 +85,16 @@
   {% for key, params in panel_config.items() %}
     {% if params["type"] == "kasa_plug" and params["set_to"] != "" %}
       
-      <div class="kasa-plug-control">
+      <div class="kasa-plug-control" data-schedule='{{ params["schedule"] | tojson }}' >
         {{ params["label"] }} <span>({{ params["type"] }})</span>
-        <br>
-        
-        <button class="kasa-toggle-plug" data-ip="{{ params["set_to"] }}">Toggle</button> 
-        {% if params["auto_enabled"] %} <span><strong>(Auto mode)</strong></span> {% endif %}
+        <br>     
+        <button class="kasa-toggle-plug" 
+                data-ip="{{ params["set_to"] }}" 
+                data-device="{{ key }}" >Loading...</button> 
+        {% if params["auto_enabled"] %} 
+          <span><strong>(Auto mode)</strong></span>
+          <div class="next-schedule"></div>  
+        {% endif %}
       </div>
 
       <br>

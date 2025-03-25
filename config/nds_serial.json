@@ -20,10 +20,10 @@
         "schedule": [
             {
                 "days": [
-                    "Monday"
+                    "Tuesday"
                 ],
-                "start": "20:13",
-                "end": "20:15"
+                "start": "16:33",
+                "end": "16:35"
             }
         ],
         "auto_enabled": true

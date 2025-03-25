@@ -98,7 +98,7 @@ def register_serial_sockets(SerialReader, socketio, app):
             serial_device.start()
             serial_device_list[serial_device.device_name]= serial_device
 
-def register_control_scheduler_sockets(ControlScheduler, app):
+def register_control_scheduler_sockets(ControlScheduler, socketio, app):
     global control_schedule_list
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
@@ -106,7 +106,8 @@ def register_control_scheduler_sockets(ControlScheduler, app):
     
     for key,param in config.items():
         if param["type"] =="kasa_plug" and param['set_to']!="" and param['auto_enabled']:
-            control_device = ControlScheduler( device_name=key, 
+            control_device = ControlScheduler( socketio,
+                                               device_name=key, 
                                                device_ip=param['set_to'],
                                                schedule_config=param['schedule'], 
                                                control_callback=toggle_kasa_plug, 
@@ -132,7 +133,7 @@ def reload_routine(SerialReader, ControlScheduler, socketio, app):
 
     # Re-register
     register_serial_sockets(SerialReader, socketio, app)
-    register_control_scheduler_sockets(ControlScheduler, app)
+    register_control_scheduler_sockets(ControlScheduler, socketio, app)
 
 
 
