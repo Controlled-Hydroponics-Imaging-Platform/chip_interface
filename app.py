@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 import serial.tools.list_ports
 import time
 import json
-import os
+import os,sys
 from plugins import load_all_plugins, reload_plugins
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
@@ -15,6 +15,12 @@ app.secret_key = "supersecretkey"
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 script_list = load_all_plugins(app,socketio)
+
+def restart_program():
+    print("🔄 Restarting app...")
+    python = sys.executable  # Path to the Python interpreter
+    os.execv(python, [python] + sys.argv)  # Re-run the same script with the same args
+
 
 def load_config(config_file):
     config_path = os.path.join(app.root_path, "config", config_file)  # Correct path
@@ -79,6 +85,7 @@ def settings():
         with open(os.path.join(app.root_path, "config", "panels.json"), "w") as file:
             json.dump(new_settings, file, indent=4)
 
+        reload_plugins(app,socketio)
         flash(f"{panel_submitted} panel settings saved successfully!", "success")
         return redirect(url_for("settings"))
 
@@ -119,7 +126,7 @@ def configure(panel):
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(new_config, file, indent=4)
 
-        reload_plugins(app,socketio)
+        restart_program()
         flash(f"{panel} configuration saved successfully!", "success")
         return redirect(url_for("configure", panel=panel))
 
@@ -172,6 +179,8 @@ def set_schedule(config_file, key):
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
             json.dump(config_data, file, indent=4)
 
+        restart_program()
+        
         flash("Schedule saved successfully!", "success")
         return redirect(url_for('set_schedule', config_file=config_file, key=key))
 

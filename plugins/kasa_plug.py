@@ -16,9 +16,10 @@ def run_async(coro):
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro)
 
     if loop.is_running():
-        return asyncio.ensure_future(coro)  # Schedule the coroutine
+        return asyncio.run_coroutine_threadsafe(coro, loop).result()
     else:
         return loop.run_until_complete(coro)
 
@@ -38,6 +39,38 @@ async def discover_kasa_devices():
         }
         device_list.append(device_info)
     return device_list
+
+
+# set plug ON/OFF
+@plugin_blueprint.route("/set_plug", methods=["POST"])
+def set_plug():
+    ip = request.args.get("ip")
+    state = request.args.get("state")
+    if not ip:
+        return jsonify({"error": "Missing plug IP"}), 400
+    
+    # Convert '1'/'0', 'true'/'false', etc. to boolean
+    state = str(state).lower() in ("1", "true", "on")
+
+    result = run_async(set_kasa_plug(ip, state))
+    
+    return jsonify({"message": result})
+
+async def set_kasa_plug(ip, state):
+    plug = SmartPlug(ip)
+    await plug.update()
+
+    if plug.is_on == state:
+        return f"✅ Plug {ip} is already {'ON' if state else 'OFF'}"
+    
+    if state:
+        await plug.turn_on()
+        return f"🔌 Plug {ip} turned ON"
+    else:
+        await plug.turn_off()
+        return f"🔌 Plug {ip} turned OFF"
+
+
 
 # Toggle plug ON/OFF
 @plugin_blueprint.route("/toggle", methods=["POST"])

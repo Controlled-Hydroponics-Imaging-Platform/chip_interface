@@ -1,12 +1,116 @@
 import os
 import importlib
-from datetime import datetime
+from datetime import datetime, time
 import eventlet
 import serial
 strfmt= "%Y-%m-%d %H:%M:%S"
 
 module_list={}
 
+class ControlScheduler:
+    def __init__(self, device_name, device_ip, schedule_config, control_callback, check_state_callback):
+        self.task = None
+        self.state_sync_task = None
+        self._running = True
+        self.device_name = device_name
+        self.device_ip = device_ip
+        self.schedule = schedule_config  # Pass the schedule JSON list here
+        self.control_callback = control_callback  # Callable to toggle plug ON/OFF
+        self.check_state_callback = check_state_callback
+        self.last_state = False
+
+    def start(self):
+        self.kill()  # Always clean start
+        print(f"✅ Starting control scheduler for {self.device_name}")
+        self._running = True
+        self.task = eventlet.spawn(self.control_schedule)
+        self.state_sync_task = eventlet.spawn(self.sync_state_loop)
+
+    def kill(self):
+        print(f"🛑 Killing control scheduler for {self.device_name}")
+        self._running = False  # Signal both loops to stop
+
+        # Kill the control task
+        if self.task:
+            try:
+                self.task.kill()
+                self.task.wait()  # ✅ Ensure it's dead
+                print(f"✅ Control loop for {self.device_name} killed")
+            except Exception as e:
+                print(f"⚠️ Error killing control loop: {e}")
+            self.task = None
+
+        # Kill the sync state task
+        if self.state_sync_task:
+            try:
+                self.state_sync_task.kill()
+                self.state_sync_task.wait()  # ✅ Ensure it's dead
+                print(f"✅ Sync state loop for {self.device_name} killed")
+            except Exception as e:
+                print(f"⚠️ Error killing sync state loop: {e}")
+            self.state_sync_task = None
+
+        print(f"✅ {self.device_name} fully stopped")
+
+    def sync_state_loop(self):
+        """Periodically fetches the real plug state."""
+        try:
+            while self._running:
+                try:
+                    with eventlet.Timeout(5, False):  # ✅ Optional timeout safety
+                        real_state = self.check_state_callback(self.device_ip)
+                        self.last_state = real_state
+                        print(f"🔄 Synced state: {self.device_name} is {'ON' if real_state else 'OFF'}")
+                except Exception as e:
+                    print(f"⚠️ Error syncing state for {self.device_name}: {e}")
+                eventlet.sleep(10)
+        finally:
+            print(f"✅ Sync loop fully exited for {self.device_name}")
+
+    def control_schedule(self):
+        try:
+            while self._running:
+                now = datetime.now()
+                today = now.strftime("%A")
+                current_time = now.time()
+
+                should_be_on = False
+                for block in self.schedule:
+                    if today in block.get("days", []):
+                        start_time = self._parse_time(block.get("start"))
+                        end_time = self._parse_time(block.get("end"))
+                        if start_time and end_time and self._time_in_range(start_time, end_time, current_time):
+                            should_be_on = True
+                            break
+
+                # Only act if the state needs changing
+                if should_be_on != self.last_state:
+                    action = "ON" if should_be_on else "OFF"
+                    print(f"🕒 [{now.strftime(strfmt)}] - {self.device_name} → {action}")
+                    try:
+                        self.control_callback(self.device_ip, should_be_on)
+                        self.last_state = should_be_on  # ✅ Update assuming success
+                    except Exception as e:
+                        print(f"❌ Failed to toggle {self.device_name}: {e}")
+
+                eventlet.sleep(30)
+        finally:
+            print(f"✅ Schedule loop fully exited for {self.device_name}")
+
+    def _parse_time(self, t_str):
+        try:
+            h, m = map(int, t_str.split(":"))
+            return time(h, m)
+        except (ValueError, TypeError):
+            return None
+
+    def _time_in_range(self, start, end, now_time):
+        if start <= end:
+            return start <= now_time <= end
+        else:
+            # Handles overnight schedules (start: 22:00, end: 06:00)
+            return now_time >= start or now_time <= end
+        
 class SerialReader:
     def __init__(self, socketio, device_name, port, baudrate, timeout, process_raw_data, poll_rate):
         self.task = None
@@ -22,7 +126,6 @@ class SerialReader:
 
     def start(self):
         if self.task:
-            print("🛑 Stopping existing task")
             self.kill()
 
         print(f"🚀 Starting serial reader task for {self.device_name}")
@@ -117,6 +220,9 @@ def load_all_plugins(app, socketio):
             if hasattr(module, 'register_serial_sockets'):
                 module.register_serial_sockets(SerialReader, socketio, app)
                 print(f" * {module_name} serial sockets started")
+            if hasattr(module, 'register_control_scheduler_sockets'):
+                module.register_control_scheduler_sockets(ControlScheduler, app)
+                print(f" * {module_name} Control Schedulers started")
             if hasattr(module, 'scripts'):
                 for script in module.scripts: script_list.append(script)
                 print(f" * {', '.join(script for script in module.scripts)} scripts will be loaded")
@@ -126,5 +232,5 @@ def load_all_plugins(app, socketio):
 def reload_plugins(app, socketio):
     for module_name,module in module_list.items():
         if hasattr(module, 'reload_routine'):
-            module.reload_routine(SerialReader, socketio, app)
+            module.reload_routine(SerialReader, ControlScheduler, socketio, app)
             print(f"{module_name} plugins/sockets reloaded")
