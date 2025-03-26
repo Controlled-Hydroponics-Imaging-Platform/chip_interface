@@ -1,0 +1,12 @@
+[Unit]
+Description=Chip Interface Gunicorn Service
+After=network.target
+
+[Service]
+User=root
+Environment="BASE_URL=http://chip.local/"
+WorkingDirectory=/home/pi/chip_interface
+ExecStart=/home/pi/chip_interface/venv/bin/gunicorn -k eventlet -w 1 app:app --bind 0.0.0.0:80
+
+[Install]
+WantedBy=multi-user.target

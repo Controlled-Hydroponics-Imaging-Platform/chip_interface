@@ -104,7 +104,6 @@ class ControlScheduler:
 
                 sleep(30)
         finally:
-            self.control_callback(self.device_ip,False)
             print(f"✅ Schedule loop fully exited for {self.device_name}")
 
     def _parse_time(self, t_str):

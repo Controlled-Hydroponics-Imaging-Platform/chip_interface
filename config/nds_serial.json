@@ -22,8 +22,29 @@
                 "days": [
                     "Tuesday"
                 ],
-                "start": "16:33",
-                "end": "16:35"
+                "start": "20:21",
+                "end": "20:23"
+            },
+            {
+                "days": [
+                    "Tuesday"
+                ],
+                "start": "20:26",
+                "end": "20:29"
+            },
+            {
+                "days": [
+                    "Tuesday"
+                ],
+                "start": "20:32",
+                "end": "20:35"
+            },
+            {
+                "days": [
+                    "Tuesday"
+                ],
+                "start": "20:38",
+                "end": "20:42"
             }
         ],
         "auto_enabled": true
@@ -35,7 +56,7 @@
         "values": [
             ""
         ],
-        "set_to": "",
+        "set_to": "192.168.2.70",
         "schedule": "",
         "auto_enabled": false
     }

@@ -11,6 +11,7 @@ from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 
 app = Flask(__name__)
+app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000/')
 app.secret_key = "supersecretkey" 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
@@ -165,7 +166,7 @@ def set_schedule(config_file, key):
                 "start": start_time,
                 "end": end_time
             })
-            
+
             index += 1
 
         # Save the updated schedule back into the config

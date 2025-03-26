@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, url_for, current_app
 from flask_socketio import SocketIO
 import eventlet
 import serial
@@ -17,6 +17,7 @@ scripts =["nds.js"]
 
 valid_sensors = ["Distance", "Water_Temp", "EC", "PH"]
 
+host_url=None
 serial_device_list = {}
 control_schedule_list = {}
 
@@ -50,7 +51,8 @@ def process_nds_data(serial_output):
 
 
 def check_kasa_plug_status(device_ip):
-    status_url = f"http://localhost:5000/kasa_plug/status?ip={device_ip}"
+
+    status_url = f"{host_url}kasa_plug/status?ip={device_ip}"
     try:
         response = requests.get(status_url, timeout=30)
         if response.status_code == 200:
@@ -65,8 +67,7 @@ def check_kasa_plug_status(device_ip):
 
 def toggle_kasa_plug(device_ip, state):
     try:
-        state_str = "true" if state else "false"
-        endpoint_url = f"http://localhost:5000/kasa_plug/set_plug?ip={device_ip}&state={state}"
+        endpoint_url = f"{host_url}/kasa_plug/set_plug?ip={device_ip}&state={state}"
         print(endpoint_url)
         # Send the POST request
         response = requests.post(endpoint_url)
@@ -100,13 +101,16 @@ def register_serial_sockets(SerialReader, socketio, app):
 
 def register_control_scheduler_sockets(ControlScheduler, socketio, app):
     global control_schedule_list
+    global host_url 
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
     config = load_config(app.root_path, config_file)
+    host_url= app.config['BASE_URL']
     
     for key,param in config.items():
         if param["type"] =="kasa_plug" and param['set_to']!="" and param['auto_enabled']:
-            control_device = ControlScheduler( socketio,
+            control_device = ControlScheduler( 
+                                               socketio,
                                                device_name=key, 
                                                device_ip=param['set_to'],
                                                schedule_config=param['schedule'], 

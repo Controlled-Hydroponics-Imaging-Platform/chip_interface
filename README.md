@@ -33,8 +33,9 @@ Extendable and modular interface for controlled hydroponics platforms
 #### Libraries
 flask → Runs the web server.
 flask-socketio → Enables real-time updates.
-eventlet → Improves WebSocket performance.
+Threaded(Python native), eventlet → Improves WebSocket performance.
 pyserial → Handles serial communication (for talking to hardware).
+Gunicorn → Handles production ready serving
 
 ## Change log
 ### 0.0.2
