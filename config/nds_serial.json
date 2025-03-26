@@ -22,29 +22,8 @@
                 "days": [
                     "Tuesday"
                 ],
-                "start": "20:21",
-                "end": "20:23"
-            },
-            {
-                "days": [
-                    "Tuesday"
-                ],
-                "start": "20:26",
-                "end": "20:29"
-            },
-            {
-                "days": [
-                    "Tuesday"
-                ],
-                "start": "20:32",
-                "end": "20:35"
-            },
-            {
-                "days": [
-                    "Tuesday"
-                ],
-                "start": "20:38",
-                "end": "20:42"
+                "start": "20:49",
+                "end": "20:55"
             }
         ],
         "auto_enabled": true
