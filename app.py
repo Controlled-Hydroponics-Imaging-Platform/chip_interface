@@ -6,6 +6,7 @@ import serial.tools.list_ports
 import time
 import json
 import os,sys
+import subprocess
 from plugins import load_all_plugins, reload_plugins
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
@@ -17,11 +18,6 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 script_list = load_all_plugins(app,socketio)
 
-# def restart_program():
-#     print("🔄 Restarting...")
-#     subprocess.Popen([sys.executable] + sys.argv)
-#     os._exit(0)
-
 
 def load_config(config_file):
     config_path = os.path.join(app.root_path, "config", config_file)  # Correct path
@@ -32,6 +28,71 @@ def load_config(config_file):
         print(f"🚨 JSON Error: {e}")
         return {}
 
+
+@app.route("/restart", methods=["POST"])
+def restart_pi():
+    print("🔄 Restart requested!")
+    subprocess.Popen(["sudo", "reboot"])
+    return "Restarting...", 200
+
+@app.route("/configure_wifi", methods=["POST"])
+def configure_wifi():
+    ssid = request.form.get("ssid")
+    password = request.form.get("password")
+
+    if not ssid:
+        flash("⚠️ SSID is required.", "error")
+        return redirect(url_for("settings"))
+
+    try:
+        # Example using nmcli (you might adapt based on your setup)
+        subprocess.run(["nmcli", "dev", "wifi", "connect", ssid, "password", password], check=True)
+        flash(f"✅ Connected to {ssid}. Restarting system...", "success")
+    except subprocess.CalledProcessError as e:
+        flash(f"❌ Failed to connect to {ssid}: {e}", "error")
+        return redirect(url_for("settings"))
+
+    # ✅ Restart the Raspberry Pi
+    subprocess.Popen(["sudo", "reboot"])
+
+    return redirect(url_for("settings"))
+
+
+@app.route("/scan_wifi")
+def scan_wifi():
+    try:
+        # Force a fresh scan first
+        subprocess.call(["sudo", "nmcli", "dev", "wifi", "rescan"])
+
+        eventlet.sleep(2)  # Optional: slight delay to allow scan completion
+
+        result = subprocess.check_output(["sudo", "nmcli", "-t", "-f", "SSID,SIGNAL", "dev", "wifi"]).decode()
+
+        networks = []
+        for line in result.strip().split("\n"):
+            if line:
+                parts = line.split(":")
+                if len(parts) == 2:
+                    ssid, signal = parts
+                    if ssid:  # Avoid blank SSIDs
+                        networks.append({"ssid": ssid, "signal": signal})
+        return jsonify({"networks": networks})
+    except Exception as e:
+        print(f"⚠️ Wi-Fi scan failed: {e}")
+        return jsonify({"networks": []})
+
+@app.route("/current_wifi")
+def current_wifi():
+    try:
+        result = subprocess.check_output(["nmcli", "-t", "-f", "active,ssid", "dev", "wifi"]).decode()
+        for line in result.strip().split("\n"):
+            active, ssid = line.split(":")
+            if active == "yes":
+                return jsonify({"ssid": ssid})
+        return jsonify({"ssid": None})
+    except Exception as e:
+        print(f"⚠️ Failed to get current Wi-Fi: {e}")
+        return jsonify({"ssid": None})
 
 # API
 @app.route("/get_serial_ports")
@@ -61,15 +122,16 @@ def home():
 
     return render_template("index.html",panels=enabled_panels, config_params = config_params)
 
+
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     panels = load_config("panels.json")
 
+    # ✅ Process panel config submissions (no changes)
     if request.method == "POST":
         new_settings = panels
         panel_submitted = request.form.get('panel_name')
 
-        # Process form submission
         for key, settings in panels[panel_submitted].items():
             user_input = request.form.get(f"{panel_submitted}_{key}", "")
             print(user_input)
@@ -77,20 +139,31 @@ def settings():
             if settings["value_type"] == "number":
                 new_settings[panel_submitted][key]["set_to"]  = int(user_input)
             elif settings["value_type"] == "boolean":
-                new_settings[panel_submitted][key]["set_to"]  = True if user_input =="on" else False
+                new_settings[panel_submitted][key]["set_to"]  = True if user_input == "on" else False
             else:
                 new_settings[panel_submitted][key]["set_to"] = user_input
 
-
-        # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", "panels.json"), "w") as file:
             json.dump(new_settings, file, indent=4)
 
-        reload_plugins(app,socketio)
+        reload_plugins(app, socketio)
         flash(f"{panel_submitted} panel settings saved successfully!", "success")
         return redirect(url_for("settings"))
 
-    return render_template("settings.html",panels=panels)
+    # ✅ Scan available Wi-Fi networks using nmcli (for Raspberry Pi 5 NetworkManager)
+    wifi_networks = []
+    try:
+        result = subprocess.check_output(["nmcli", "-t", "-f", "SSID,SIGNAL", "dev", "wifi"], stderr=subprocess.DEVNULL).decode()
+        for line in result.strip().split("\n"):
+            if line:
+                ssid, signal = line.split(":")
+                if ssid:
+                    wifi_networks.append({"ssid": ssid, "signal": signal})
+    except Exception as e:
+        print(f"⚠️ Failed to scan Wi-Fi networks: {e}")
+
+    return render_template("settings.html", panels=panels, wifi_networks=wifi_networks)
+
 
 @app.route("/configuration/<string:panel>", methods=["GET", "POST"])
 def configure(panel):

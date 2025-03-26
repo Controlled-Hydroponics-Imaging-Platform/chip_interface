@@ -10,8 +10,86 @@ function sendCommand() {
     .then(data => alert("Command Sent: " + data.response));
 }
 
-// Serial port loader
+// function refreshWifiList() {
+//     fetch('/scan_wifi')
+//         .then(response => response.json())
+//         .then(data => {
+//             const select = document.getElementById('ssid');
+//             select.innerHTML = '';
+//             data.networks.forEach(net => {
+//                 const option = document.createElement('option');
+//                 option.value = net.ssid;
+//                 option.text = `${net.ssid} (${net.signal}%)`;
+//                 select.appendChild(option);
+//             });
+//         });
+// }
+
+
+
+
+function restartPi() {
+    if (confirm("⚠️ Are you sure you want to restart the Raspberry Pi?")) {
+        fetch('/restart', { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    alert("✅ Raspberry Pi is restarting...");
+                } else {
+                    alert("❌ Failed to restart the Pi.");
+                }
+            })
+            .catch(err => {
+                console.error("Restart error:", err);
+                alert("❌ Restart request failed.");
+            });
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+
+    scanWiFi();
+    getCurrentWiFi();
+
+    document.getElementById('refresh_wifi').addEventListener('click', function() {
+        scanWiFi();
+    });
+    
+    document.getElementById('wifi_dropdown').addEventListener('change', function() {
+        const selectedSSID = this.value;
+        if (selectedSSID) {
+            document.getElementById('ssid_input').value = selectedSSID;
+        }
+    });
+    document.getElementById('wifi_form').addEventListener('submit', function(e) {
+        alert("✅ Wi-Fi settings saved. The Raspberry Pi will now restart to apply changes. Please reconnect once it's back online.");
+    });
+
+
+    function getCurrentWiFi() {
+        fetch('/current_wifi')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('current_ssid').textContent = data.ssid || 'Not connected';
+            });
+    }
+
+    function scanWiFi() {
+        fetch('/scan_wifi')
+            .then(response => response.json())
+            .then(data => {
+                const dropdown = document.getElementById('wifi_dropdown');
+                dropdown.innerHTML = '<option value="">-- Select a Network --</option>';
+                data.networks.forEach(network => {
+                    const option = document.createElement('option');
+                    option.value = network.ssid;
+                    option.textContent = `${network.ssid} (${network.signal}%)`;
+                    dropdown.appendChild(option);
+                });
+            });
+    }
+    
+
+    
 
     function updateSerialPortsFor(selectElement) {
         const currentSelection = selectElement.value;

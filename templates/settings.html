@@ -4,7 +4,9 @@
 
 {% block content %}
 
-<h2> Settings </h2>
+<h1> Settings </h1>
+
+<h2> Panels </h2>
 
 {% for panel, settings in panels.items() %}
 
@@ -41,7 +43,27 @@
 <button type="submit">Save Configuration</button>
 </form> 
 
-
 {% endfor %}
+
+<h2>Wi-Fi Configuration</h2>
+<form id="wifi_form" action="{{ url_for('configure_wifi') }}" method="POST">
+    <div id="current_ssid" style="margin-top: 10px; font-weight: bold;">Connected to: <span id="current_ssid">Loading...</span></div>
+    
+    <label for="ssid_input">SSID:</label>
+    <input type="text" id="ssid_input" name="ssid" placeholder="Select or type SSID">
+
+    <select id="wifi_dropdown">
+        <option value="">-- Select a Network --</option>
+    </select>
+
+    <button type="button" id="refresh_wifi">🔄 Scan Wi-Fi</button>
+
+    <br><br>
+    <label for="wifi_password">Password:</label>
+    <input type="password" id="wifi_password" name="password" placeholder="Enter Wi-Fi password">
+
+    <br><br>
+    <button type="submit">Save Wi-Fi Config</button>
+</form>
 
 {% endblock %}
