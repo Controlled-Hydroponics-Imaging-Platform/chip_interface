@@ -22,7 +22,7 @@
             {% elif setting["type"] == "serial_port" %}
                 <div class="serial-group">
                     <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
-                    <select class="serial_port" name="{{ key }}" id="{{ key }}">
+                    <select class="serial_port" name="{{ key }}" id="{{ key }}" data-selected="{{ setting['set_to'] }}">
                         {% for value in setting["values"] %}
                             <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>
                                 {{ value }}
@@ -48,7 +48,7 @@
             {% elif setting["type"] == "kasa_plug" %} <!-- kasa_plug plugin -->
                 <div class="kasa-plug-group">
                     <span style="margin-left: 10px; color: gray;">{{ setting["set_to"] }}</span>
-                    <select name="{{ key }}" id="{{ key }}" class="kasa_plug">
+                    <select name="{{ key }}" id="{{ key }}" class="kasa_plug" data-selected="{{ setting['set_to'] }}">
 
                         {% for value in setting["values"] %}
                             <option value="{{ value }}" {% if value == setting["set_to"] %}selected{% endif %}>

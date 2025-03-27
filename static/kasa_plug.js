@@ -1,27 +1,36 @@
 // ✅ Global function available to everyone
 function updateKasaPlugsFor(selectElement) {
     console.log("Fetching Kasa devices...");
-    const currentSelection = selectElement.value;
+    const previousValue = selectElement.getAttribute("data-selected") || "";
+
     fetch("/kasa_plug/get_kasa_devices")
         .then(response => response.json())
         .then(data => {
             selectElement.innerHTML = "";
+
+            const emptyOption = document.createElement("option");
+            emptyOption.value = "";
+            emptyOption.text = "-- None --";
+            selectElement.appendChild(emptyOption);
+
             if (data.length === 0) {
-                let option = document.createElement("option");
-                option.text = "No Kasa devices found";
-                selectElement.appendChild(option);
+                const noDevices = document.createElement("option");
+                noDevices.text = "No Kasa devices found";
+                noDevices.disabled = true;
+                selectElement.appendChild(noDevices);
             } else {
                 data.forEach(device => {
-                    let option = document.createElement("option");
+                    const option = document.createElement("option");
                     option.value = device.ip;
                     option.text = `${device.alias} (${device.ip})`;
-                    if (device.ip === currentSelection) option.selected = true;
+                    if (device.ip === previousValue) option.selected = true;
                     selectElement.appendChild(option);
                 });
             }
         })
         .catch(error => console.error("Error fetching Kasa devices:", error));
 }
+
 
 function updatePlugButtonState(button) {
     const plugIP = button.getAttribute("data-ip");

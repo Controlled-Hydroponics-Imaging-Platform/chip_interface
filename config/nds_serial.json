@@ -14,16 +14,22 @@
         "type": "kasa_plug",
         "value_type": "text",
         "values": [
-            "None"
+            ""
         ],
-        "set_to": "192.168.2.70",
+        "set_to": "10.0.1.72",
         "schedule": [
             {
                 "days": [
-                    "Tuesday"
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
                 ],
-                "start": "20:49",
-                "end": "20:55"
+                "start": "06:30",
+                "end": "06:35"
             }
         ],
         "auto_enabled": true
@@ -35,8 +41,22 @@
         "values": [
             ""
         ],
-        "set_to": "",
-        "schedule": "",
-        "auto_enabled": false
+        "set_to": "10.0.1.97",
+        "schedule": [
+            {
+                "days": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
+                ],
+                "start": "06:30",
+                "end": "22:30"
+            }
+        ],
+        "auto_enabled": true
     }
 }

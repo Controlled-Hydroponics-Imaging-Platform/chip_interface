@@ -26,8 +26,6 @@ function sendCommand() {
 // }
 
 
-
-
 function restartPi() {
     if (confirm("⚠️ Are you sure you want to restart the Raspberry Pi?")) {
         fetch('/restart', { method: 'POST' })
@@ -45,31 +43,46 @@ function restartPi() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-
-    scanWiFi();
-    getCurrentWiFi();
-
-    document.getElementById('refresh_wifi').addEventListener('click', function() {
+document.addEventListener("DOMContentLoaded", function () {
+    // Wi-Fi Setup
+    if (document.getElementById('wifi_dropdown')) {
         scanWiFi();
-    });
-    
-    document.getElementById('wifi_dropdown').addEventListener('change', function() {
-        const selectedSSID = this.value;
-        if (selectedSSID) {
-            document.getElementById('ssid_input').value = selectedSSID;
-        }
-    });
-    document.getElementById('wifi_form').addEventListener('submit', function(e) {
-        alert("✅ Wi-Fi settings saved. The Raspberry Pi will now restart to apply changes. Please reconnect once it's back online.");
-    });
+    }
 
+    if (document.getElementById('current_ssid')) {
+        getCurrentWiFi();
+    }
+
+    const refreshBtn = document.getElementById('refresh_wifi');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', scanWiFi);
+    }
+
+    const wifiDropdown = document.getElementById('wifi_dropdown');
+    if (wifiDropdown) {
+        wifiDropdown.addEventListener('change', function () {
+            const selectedSSID = this.value;
+            if (selectedSSID) {
+                const ssidInput = document.getElementById('ssid_input');
+                if (ssidInput) ssidInput.value = selectedSSID;
+            }
+        });
+    }
+
+    const wifiForm = document.getElementById('wifi_form');
+    if (wifiForm) {
+        wifiForm.addEventListener('submit', function (e) {
+            alert("✅ Wi-Fi settings saved. The Raspberry Pi will now restart to apply changes. Please reconnect once it's back online.");
+        });
+    }
 
     function getCurrentWiFi() {
         fetch('/current_wifi')
             .then(response => response.json())
             .then(data => {
-                document.getElementById('current_ssid').textContent = data.ssid || 'Not connected';
+                const ssid = data.ssid || 'Not connected';
+                const currentElem = document.getElementById('current_ssid');
+                if (currentElem) currentElem.textContent = ssid;
             });
     }
 
@@ -78,6 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(response => response.json())
             .then(data => {
                 const dropdown = document.getElementById('wifi_dropdown');
+                if (!dropdown) return;
                 dropdown.innerHTML = '<option value="">-- Select a Network --</option>';
                 data.networks.forEach(network => {
                     const option = document.createElement('option');
@@ -87,49 +101,55 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
             });
     }
-    
 
-    
-
+    // Serial Port Handling
     function updateSerialPortsFor(selectElement) {
-        const currentSelection = selectElement.value;
+        const previousValue = selectElement.getAttribute("data-selected") || "";
+    
         fetch("/get_serial_ports")
             .then(response => response.json())
             .then(data => {
-                selectElement.innerHTML = ""; // Clear previous options
+                selectElement.innerHTML = "";
+    
+                const emptyOption = document.createElement("option");
+                emptyOption.value = "";
+                emptyOption.text = "-- None --";
+                selectElement.appendChild(emptyOption);
+    
                 if (data.length === 0) {
-                    let option = document.createElement("option");
-                    option.text = "No serial devices found";
-                    selectElement.appendChild(option);
+                    const noPorts = document.createElement("option");
+                    noPorts.text = "No serial devices found";
+                    noPorts.disabled = true;
+                    selectElement.appendChild(noPorts);
                 } else {
                     data.forEach(port => {
-                        let option = document.createElement("option");
+                        const option = document.createElement("option");
                         option.value = port.device;
                         option.text = `${port.description === "n/a" ? "" : port.description} (${port.device})`;
-                        if (port.device === currentSelection) {
-                            option.selected = true;
-                        }
+                        if (port.device === previousValue) option.selected = true;
                         selectElement.appendChild(option);
                     });
                 }
             })
             .catch(error => console.error("Error fetching serial ports:", error));
     }
+    
 
-    // Attach click event to all refresh buttons
+    // Attach click to all serial refresh buttons
     document.querySelectorAll(".refresh_serial").forEach(button => {
-        button.addEventListener("click", function() {
-            const select = this.closest('.serial-group').querySelector('.serial_port');
-            console.log("🔄 Refreshing serial ports for:", select);
-            updateSerialPortsFor(select);
+        button.addEventListener("click", function () {
+            const select = this.closest('.serial-group')?.querySelector('.serial_port');
+            if (select) {
+                console.log("🔄 Refreshing serial ports for:", select);
+                updateSerialPortsFor(select);
+            }
         });
     });
 
-    // Optional: Initial load of all dropdowns
+    // Initial load of serial dropdowns
     document.querySelectorAll(".serial_port").forEach(select => {
         updateSerialPortsFor(select);
     });
-
 });
 
 
