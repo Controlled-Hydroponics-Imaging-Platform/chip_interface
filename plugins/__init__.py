@@ -5,6 +5,8 @@ from time import sleep
 import eventlet
 import threading
 import serial
+import random
+
 strfmt= "%Y-%m-%d %H:%M:%S"
 
 module_list={}
@@ -23,7 +25,7 @@ class ControlScheduler:
         self.last_state = False
 
     def start(self):
-        self.kill()  # Always clean start
+        # self.kill()  # Always clean start
         print(f"✅ Starting control scheduler for {self.device_name}")
         self._running = True
 
@@ -69,39 +71,50 @@ class ControlScheduler:
                         # print(f"🔄 Synced state: {self.device_name} is {'ON' if real_state else 'OFF'}")
                 except Exception as e:
                     print(f"⚠️ Error syncing state for {self.device_name}: {e}")
-                sleep(10)
+                sleep(random.uniform(0,10))
         finally:
             print(f"✅ Sync loop fully exited for {self.device_name}")
 
     def control_schedule(self):
         try:
             while self._running:
-                now = datetime.now()
-                today = now.strftime("%A")
-                current_time = now.time()
-                # print(self.schedule)
+                try:
+                    now = datetime.now()
+                    today = now.strftime("%A")
+                    current_time = now.time()
+                    print(f"🕒 Now: {now}, Today: {today}, Current time: {current_time}")
+                    print(f"📅 Schedule: {self.schedule}")
+                    # print(self.schedule)
 
-                should_be_on = False
-                for block in self.schedule:
-                    if today in block.get("days", []):
-                        start_time = self._parse_time(block.get("start"))
-                        end_time = self._parse_time(block.get("end"))
-                        if start_time and end_time and self._time_in_range(start_time, end_time, current_time):
-                            should_be_on = True
-                            break
+                    should_be_on = False
+                    for block in self.schedule:
+                        if today in block.get("days", []):
+                            block_days = block.get("days",[])
+                            start_time = self._parse_time(block.get("start"))
+                            end_time = self._parse_time(block.get("end"))
+                            print(f"🔍 Checking: {block_days}")
+                            print(f"    Start: {start_time}, End: {end_time}, Now: {current_time}")
+                            print(f"    Match today? {'Yes' if today in block_days else 'No'}")
+                            print(f"    In range? {self._time_in_range(start_time, end_time, current_time)}")
 
-                # print(should_be_on)
-                
-                # Only act if the state needs changing
-                if should_be_on != self.last_state:
-                    action = "ON" if should_be_on else "OFF"
-                    print(f"🕒 [{now.strftime(strfmt)}] - {self.device_name} → {action}")
-                    try:
-                        self.control_callback(self.device_ip, should_be_on)
-                        self.last_state = should_be_on  # ✅ Update assuming success
-                    except Exception as e:
-                        print(f"❌ Failed to toggle {self.device_name}: {e}")
+                            if start_time and end_time and self._time_in_range(start_time, end_time, current_time):
+                                should_be_on = True
+                                break
 
+                    # print(should_be_on)
+                    
+                    # Only act if the state needs changing
+                    if should_be_on != self.last_state:
+                        action = "ON" if should_be_on else "OFF"
+                        print(f"🕒 [{now.strftime(strfmt)}] - {self.device_name} → {action}")
+                        try:
+                            self.control_callback(self.device_ip, should_be_on)
+                            self.last_state = should_be_on  # ✅ Update assuming success
+                        except Exception as e:
+                            print(f"❌ Failed to toggle {self.device_name}: {e}")
+                except Exception as loop_err:
+                    print(f"❌ Unexpected crash in control loop for {self.device_name}: {loop_err}")
+                    
                 sleep(30)
         finally:
             print(f"✅ Schedule loop fully exited for {self.device_name}")

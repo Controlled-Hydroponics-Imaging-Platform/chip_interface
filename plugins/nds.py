@@ -67,8 +67,8 @@ def check_kasa_plug_status(device_ip):
 
 def toggle_kasa_plug(device_ip, state):
     try:
-        endpoint_url = f"{host_url}/kasa_plug/set_plug?ip={device_ip}&state={state}"
-        print(endpoint_url)
+        endpoint_url = f"{host_url}kasa_plug/set_plug?ip={device_ip}&state={state}"
+        # print(endpoint_url)
         # Send the POST request
         response = requests.post(endpoint_url)
 
@@ -109,6 +109,7 @@ def register_control_scheduler_sockets(ControlScheduler, socketio, app):
     
     for key,param in config.items():
         if param["type"] =="kasa_plug" and param['set_to']!="" and param['auto_enabled']:
+            print(key)
             control_device = ControlScheduler( 
                                                socketio,
                                                device_name=key, 
