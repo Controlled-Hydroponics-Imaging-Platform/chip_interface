@@ -1,0 +1,23 @@
+<div id ="mqtt_broker">
+    MQTT Broker: {{panel_config["mqtt_broker_address"]["set_to"]}}:{{ panel_config["mqtt_broker_port"]["set_to"]}}, 
+    Connected as {{ panel_config["mqtt_user"]["set_to"]}}
+    <br>
+    topic: {{ panel_config["mqtt_sub_topic"]["set_to"]}}
+</div>
+
+<br>
+
+<div id="status"></div>
+<div id="mqtt_message" class="message-container">Waiting for data...</div>
+
+
+
+<!-- {% for key, params in panel_config.items() %}
+  {% if params["type"] == "serial_port" and params["set_to"] != "" %}
+    <span>{{ params["label"]}}</span>
+      <br>
+    <div id="{{ key }}_status"></div>
+    <div id="{{ key }}_sensors" class="sensor-container">Waiting for data...</div>
+
+  {% endif %}
+{% endfor %} -->

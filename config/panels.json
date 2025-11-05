@@ -1,4 +1,42 @@
 {
+        "Atmino": {
+        "description": {
+            "label": "description",
+            "type": "longtext",
+            "value_type": "text",
+            "set_to": "This is the new description of the spatial panel as a test"
+        },
+        "enabled": {
+            "label": "enabled",
+            "type": "checkbox",
+            "value_type": "boolean",
+            "set_to": true
+        },
+        "width": {
+            "label": "width (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 800
+        },
+        "height": {
+            "label": "height (px)",
+            "type": "number",
+            "value_type": "number",
+            "set_to": 500
+        },
+        "config": {
+            "label": "config file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "atmino.json"
+        },
+        "template": {
+            "label": "template file",
+            "type": "text",
+            "value_type": "text",
+            "set_to": "atmino.html"
+        }
+    },
     "Spatial": {
         "description": {
             "label": "description",

@@ -4,7 +4,7 @@
         "type": "serial_port",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyUSB0",
+        "set_to": "",
         "baud_rate": 9600,
         "timeout": 1,
         "poll_rate": 3
@@ -16,7 +16,7 @@
         "values": [
             ""
         ],
-        "set_to": "10.0.1.72",
+        "set_to": "",
         "schedule": [
             {
                 "days": [
@@ -41,7 +41,7 @@
         "values": [
             ""
         ],
-        "set_to": "10.0.1.97",
+        "set_to": "",
         "schedule": [
             {
                 "days": [

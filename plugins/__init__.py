@@ -11,6 +11,9 @@ strfmt= "%Y-%m-%d %H:%M:%S"
 
 module_list={}
 
+class mqtt_topic_listener:
+    pass
+
 class ControlScheduler:
     def __init__(self, socketio, device_name, device_ip, schedule_config, control_callback, check_state_callback):
         self.task = None
