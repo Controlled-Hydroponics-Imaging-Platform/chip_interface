@@ -2,46 +2,20 @@ from flask import Blueprint, jsonify, request, url_for, current_app
 import os, json
 from flask_socketio import SocketIO
 import eventlet
-import paho.mqtt.client as mqtt
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 
+# topic_list = []
+atmino_device = None
+mqtt_bridge_alias = None
+panel_association = "Atmino"
 
-topic_list = []
 
 plugin_blueprint = Blueprint('atmino',
                 __name__,
                 url_prefix='/atmino')
 
-panel_association = "NDS"
-
-scripts =["nds.js"]
-
-
-def on_connect(client, userdata, flags, rc):
-     print("Connected to MQTT broker:")
-     
-
-
-
-# def process_atmino_data(topic_output):
-#     data_dict = {}
-#     for item in topic_output.split(','):
-#         parts = item.strip().split(':', 1)
-#         if len(parts) == 2:
-#             key, value = parts
-#             key,unit = key.rsplit('_',1) if '_' in key else (key, "")
-
-#             if key not in valid_sensors:
-#                 print(f"{key} is not a valid sensor")
-#             else:
-#                 data_dict[key.strip()]= {"value": value.strip(), "unit": unit.strip()}
-
-#         else:
-#             print(f"⚠️ Skipping malformed item: '{item}'")
-#     return data_dict
-
-
+scripts =["atmino.js"]
 
 def load_config(root_path, config_file):
         config_path = os.path.join(root_path, "config", config_file)  # Correct path
@@ -53,47 +27,55 @@ def load_config(root_path, config_file):
             return {}
 
 
-# def register_mqtt_sockets(SerialReader, socketio, app):
-#     global serial_device_list
+def register_mqtt_sockets(mqttBridge, socketio, app):
+    global mqtt_bridge_alias, atmino_device
+    mqtt_bridge_alias = mqttBridge
 
-#     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
-#     config = load_config(app.root_path, config_file)
+    config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
+    config = load_config(app.root_path, config_file)
 
-#     for key,param in config.items():
-#         if param["type"] =="serial_port" and param['set_to']!="":
-#             serial_device = SerialReader( socketio, 
-#                                           device_name=key, 
-#                                           port=param["set_to"],
-#                                           baudrate=param["baud_rate"],
-#                                           timeout=param["timeout"], 
-#                                           process_raw_data=process_nds_data, 
-#                                           poll_rate=param["poll_rate"] 
-#                                         )
-            
-#             serial_device.start()
-#             serial_device_list[serial_device.device_name]= serial_device
+    atmino_device = mqttBridge(socketio, 
+                               device_name="atmino1", 
+                               broker_host= config["mqtt_broker_address"]["set_to"], 
+                               broker_port = int(config["mqtt_broker_port"]["set_to"]), 
+                               topics=(config["mqtt_sub_topic"]["set_to"]), 
+                               username=config["mqtt_user"]["set_to"], 
+                               password=config["mqtt_pwd"]["set_to"], 
+                               keepalive=60, 
+                               reconnect_min=1, reconnect_max=30)
+    
+    atmino_device.start();
 
+def reload_routine(socketio, app):
+    global mqtt_bridge_alias,atmino_device
 
+    # Kill atmino devices
+    atmino_device.kill()
+    atmino_device = None
+
+    # Re-register
+    register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
+ 
 
 # API
-@plugin_blueprint.route("/topics")
-def get_topic():
-    output={}
-    counter=0;
+# @plugin_blueprint.route("/topics")
+# def get_topic():
+#     output={}
+#     counter=0;
 
-    for topic in topic_list:
-        output = {
-            f"topic {counter}": topic
-        }
-        counter+=1
+#     for topic in topic_list:
+#         output = {
+#             f"topic {counter}": topic
+#         }
+#         counter+=1
 
-    return jsonify(output)  # Return JSON response
+#     return jsonify(output)  # Return JSON response
 
 @plugin_blueprint.route("/processed_data")
-def get_serial_data():
-    device = request.args.get("device")
+def get_mqtt_data():
+    # device = request.args.get("device")
 
-    output_data = serial_device_list[device].last_output
+    output_data = atmino_device.last_output
 
 
     return jsonify(output_data)  # Return JSON response
