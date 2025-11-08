@@ -1,10 +1,10 @@
 {
-        "Atmino": {
+    "Atmino": {
         "description": {
             "label": "description",
             "type": "longtext",
             "value_type": "text",
-            "set_to": "This is the new description of the spatial panel as a test"
+            "set_to": "Atmino environmental sensing unit"
         },
         "enabled": {
             "label": "enabled",
@@ -16,13 +16,13 @@
             "label": "width (px)",
             "type": "number",
             "value_type": "number",
-            "set_to": 800
+            "set_to": 400
         },
         "height": {
             "label": "height (px)",
             "type": "number",
             "value_type": "number",
-            "set_to": 500
+            "set_to": 400
         },
         "config": {
             "label": "config file",

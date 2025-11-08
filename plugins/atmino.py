@@ -35,7 +35,7 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     config = load_config(app.root_path, config_file)
 
     atmino_device = mqttBridge(socketio, 
-                               device_name="atmino1", 
+                               device_name="atmino", 
                                broker_host= config["mqtt_broker_address"]["set_to"], 
                                broker_port = int(config["mqtt_broker_port"]["set_to"]), 
                                topics=(config["mqtt_sub_topic"]["set_to"]), 

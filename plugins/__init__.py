@@ -458,6 +458,5 @@ def load_all_plugins(app, socketio):
 def reload_plugins(app, socketio):
     for module_name,module in module_list.items():
         if hasattr(module, 'reload_routine'):
-            # module.reload_routine(SerialReader, ControlScheduler, socketio, app)
             module.reload_routine(socketio, app)
             print(f"{module_name} plugins/sockets reloaded")
