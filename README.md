@@ -31,6 +31,7 @@ Extendable and modular interface for controlled hydroponics platforms
 - JavaScript (jQuery, Knockout.js) (for frontend interactivity)
 - WebSockets (for live printer status updates)
 - Python Plugins (to extend features)
+- paho-mqtt for mqtt communication
 
 #### Libraries
 flask → Runs the web server.
