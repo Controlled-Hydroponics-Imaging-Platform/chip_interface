@@ -5,6 +5,8 @@ Extendable and modular interface for controlled hydroponics platforms
 ## Features
 - Serial communication 
 - Kasa smart plug integrations
+- Scheduling interfacess
+- MQTT Backend-front end bridging
 
 ## Structure
 
@@ -29,6 +31,7 @@ Extendable and modular interface for controlled hydroponics platforms
 - JavaScript (jQuery, Knockout.js) (for frontend interactivity)
 - WebSockets (for live printer status updates)
 - Python Plugins (to extend features)
+- paho-mqtt for mqtt communication
 
 #### Libraries
 flask → Runs the web server.
@@ -37,7 +40,17 @@ Threaded(Python native), eventlet → Improves WebSocket performance.
 pyserial → Handles serial communication (for talking to hardware).
 Gunicorn → Handles production ready serving
 
+
+### Dev information
+- panels.json is your starting point, If you want to create a new panel, update json with panel information, use other panels as a template
+- each panel should have an associated configuration json in config directory, associated html file in the templates folder, a pluging python script in the plugins folder which determines the back-end behaviour and plugs into the front end flask behaviour, JS file is optional but will help modularize front end-backend interactions and behavious
+- you will notice the `__`init`__`.py in the plugins folder has some shared protocals that plugins can pull in from such as serial, mqtt communication etc. It also shows how plugins are loaded into loaded/reloaded into the 
+- *** In future implementation I need to write how to tempalate plugin scripts..... too lazy right now
+
 ## Change log
+### 0.0.3
+- MQTT front-end  backend socket interface for plugins that use mqtt
+- reload_plugins no longer needs to send the class interface anymore
 ### 0.0.2
 - Implemented a modular, configurable plugin system
 - Implemented a kasa_plugin for integration with kasa smart plugs

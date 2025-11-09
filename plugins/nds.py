@@ -21,6 +21,11 @@ host_url=None
 serial_device_list = {}
 control_schedule_list = {}
 
+serial_reader_alias=None
+control_scheduler_alias = None
+
+
+
 
 def load_config(root_path, config_file):
         config_path = os.path.join(root_path, "config", config_file)  # Correct path
@@ -80,7 +85,9 @@ def toggle_kasa_plug(device_ip, state):
         print(f"❌ Error toggling plug {device_ip}: {e}")
 
 def register_serial_sockets(SerialReader, socketio, app):
-    global serial_device_list
+    global serial_device_list, serial_reader_alias
+
+    serial_reader_alias = SerialReader
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
     config = load_config(app.root_path, config_file)
@@ -102,6 +109,9 @@ def register_serial_sockets(SerialReader, socketio, app):
 def register_control_scheduler_sockets(ControlScheduler, socketio, app):
     global control_schedule_list
     global host_url 
+    global control_scheduler_alias
+
+    control_scheduler_alias = ControlScheduler
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
     config = load_config(app.root_path, config_file)
@@ -123,8 +133,9 @@ def register_control_scheduler_sockets(ControlScheduler, socketio, app):
 
                     
 
-def reload_routine(SerialReader, ControlScheduler, socketio, app):
-    global serial_device_list, control_schedule_list
+# def reload_routine(SerialReader, ControlScheduler, socketio, app):
+def reload_routine(socketio, app):
+    global serial_device_list, control_schedule_list, serial_reader_alias, control_scheduler_alias
 
     # Kill serial devices
     for device in serial_device_list.values():
@@ -137,8 +148,8 @@ def reload_routine(SerialReader, ControlScheduler, socketio, app):
     control_schedule_list.clear()
 
     # Re-register
-    register_serial_sockets(SerialReader, socketio, app)
-    register_control_scheduler_sockets(ControlScheduler, socketio, app)
+    register_serial_sockets(serial_reader_alias, socketio, app)
+    register_control_scheduler_sockets(control_scheduler_alias, socketio, app)
 
 
 

@@ -1,0 +1,108 @@
+<style>
+    /* Container + card */
+    .mqtt-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    /* Header + broker info */
+    #mqtt_broker {
+    font-size: 14px;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    }
+    #mqtt_broker .badge {
+    display: inline-block;
+    font-size: 12px;
+    color: #0f172a;
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+    }
+
+    /* Title */
+    .mqtt-section > h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    }
+
+    /* Connection status */
+    .mqtt-status {
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    }
+    .mqtt-status.connected {
+    border-color: #22c55e;
+    background: #f0fdf4;
+    color: #14532d;
+    }
+    .mqtt-status.disconnected {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #7f1d1d;
+    }
+
+    /* Message box */
+    .mqtt-message {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    overflow-x: auto;
+    }
+
+    /* Key–value renderer used by the plugin */
+    .kv-list {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 6px 10px;
+    }
+    .kv-row { display: contents; }
+    .kv-row .k { font-weight: 600; color: #334155; }
+    .kv-row .v { color: #0f172a; }
+
+    .meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 6px;
+    }
+
+    /* Optional: compact on small screens */
+    @media (max-width: 640px) {
+    .kv-list { grid-template-columns: 1fr; }
+    }
+
+</style>
+
+
+<div id ="mqtt_broker">
+    MQTT Broker: {{panel_config["mqtt_broker_address"]["set_to"]}}:{{ panel_config["mqtt_broker_port"]["set_to"]}}, 
+    User: {{ panel_config["mqtt_user"]["set_to"]}}
+</div>
+
+<div class="mqtt-section">
+  <div class="mqtt-status" data-device="atmino"></div>
+  <div class="mqtt-message" data-device="atmino">Waiting for data...</div>
+</div>

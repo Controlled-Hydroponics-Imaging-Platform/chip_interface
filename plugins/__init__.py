@@ -5,11 +5,209 @@ from time import sleep
 import eventlet
 import threading
 import serial
+import paho.mqtt.client as mqtt
+import json
+import ssl
 import random
 
 strfmt= "%Y-%m-%d %H:%M:%S"
 
 module_list={}
+
+
+class mqttBridge:
+    def __init__(self, socketio, device_name, broker_host, broker_port = 1883, topics=(), 
+                 client_id=None, username=None, password=None, use_tls=False, tls_ca=None, keepalive=60, reconnect_min=1, reconnect_max=30, 
+                 will_topic=None, will_payload=None, will_qos=0, will_retain=False, 
+                 decode="auto"):
+        self.socketio = socketio
+        self.device_name = device_name
+        self.broker_host = broker_host
+        self.broker_port = broker_port
+        self.topics = topics
+        self.keepalive = keepalive
+        self.decode = decode
+
+        self._running = False
+        self._client = mqtt.Client(client_id=client_id, clean_session=True)
+
+        if username:
+            try:
+                self._client.username_pw_set(username=username, password=password)
+            except Exception as e:
+                print(f"[{self.device_name}] Error setting username/password: {e}")
+
+        if use_tls:
+            try:
+                if tls_ca:
+                    self._client.tls_set(ca_certs=tls_ca, certfile=None, keyfile=None,
+                                         cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLS_CLIENT)
+                else:
+                    self._client.tls_set()
+                self._client.tls_insecure_set(False)
+            except Exception as e:
+                print(f"[{self.device_name}] TLS setup failed: {e}")
+        
+        if will_topic is not None:
+            try:
+                wp = will_payload
+                if isinstance(wp, (dict, list)):
+                    wp = json.dumps(wp)
+                self._client.will_set(will_topic, payload=wp, qos=will_qos, retain=will_retain)
+            except Exception as e:
+                print(f"[{self.device_name}] Will set failed: {e}")
+
+        try:
+            self._client.reconnect_delay_set(min_delay=reconnect_min, max_delay=reconnect_max)
+        except Exception as e:
+            print(f"[{self.device_name}] reconnect_delay_set failed: {e}")
+
+        # bind callbacks
+        self._client.on_connect = self._on_connect
+        self._client.on_disconnect = self._on_disconnect
+        self._client.on_subscribe = self._on_subscribe
+        self._client.on_message = self._on_message
+
+        self.task = None
+        self.last_output = {}
+
+    # --- API ---
+    def start(self):
+        """ start or restart the MQTT loop in a background thread"""
+        self.kill()
+        self._emit_status("connecting", {"broker": f"{self.broker_host}:{self.broker_port}"})
+        self._running = True
+
+        def _connect_and_loop():
+            while self._running:
+                try:
+                    self._client.connect(self.broker_host, self.broker_port, self.keepalive)
+                    self._client.loop_start()
+                    while self._running:
+                        sleep(1)
+                    break
+                except Exception as e:
+                    self._emit_status("error", {"error": str(e)})
+                    print(f"[{self.device_name}] MQTT start error: {e}")
+                    sleep(3)
+        
+        try:
+            self.task = threading.Thread(target=_connect_and_loop, daemon=True)
+            self.task.start()
+        except Exception as e:
+            print(f"[{self.device_name}] Thread start failed: {e}")
+
+    def kill(self):
+        """gracefully stop background thread and network loop"""
+        self._running = False
+        try:
+            self._client.loop_stop()
+        except Exception as e:
+            print(f"[{self.device_name}] loop_stop failed: {e}")
+        try:
+            self._client.disconnect()
+        except Exception as e:
+            print(f"[{self.device_name}] disconnect failed: {e}")
+
+        if self.task:
+            try:
+                self.task.join(timeout=5)
+            except Exception as e:
+                print(f"[{self.device_name}] Thread join failed: {e}")
+            self.task = None
+
+        self._emit_status("disconnected", {"broker": f"{self.broker_host}:{self.broker_port}"})
+        print(f"[{self.device_name}] Disconnected from broker {self.broker_host}:{self.broker_port}")
+
+    def publish(self, topic, payload, qos=0, retain=False):
+        """Threadsafe publish helper."""
+        try:
+            if isinstance(payload, (dict, list)):
+                payload = json.dumps(payload)
+            result = self._client.publish(topic, payload=payload, qos=qos, retain=retain)
+            return result.rc
+        except Exception as e:
+            print(f"[{self.device_name}] Publish failed: {e}")
+            return -1
+    
+    # ---- callbacks ---
+    def _on_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self._emit_status("connected", {"session_present": bool(flags.get("session present", 0))})
+            print(f"[{self.device_name}] Connected to {self.broker_host}:{self.broker_port}")
+            try:
+                if isinstance(self.topics, (list, tuple)):
+                    if self.topics and isinstance(self.topics[0], (list, tuple)):
+                        client.subscribe(self.topics)
+                    else:
+                        for topic in self.topics:
+                            client.subscribe(topic, 0)
+                elif isinstance(self.topics, dict):
+                    for t, q in self.topics.items():
+                        client.subscribe((t, q))
+                elif isinstance(self.topics, str):
+                    client.subscribe(self.topics, 0)
+            except Exception as e:
+                print(f"[{self.device_name}] Subscription failed: {e}")
+        else:
+            self._emit_status("error", {"connect_rc": rc})
+            print(f"[{self.device_name}] Connection failed (rc={rc})")
+
+    def _on_disconnect(self, client, userdata, rc):
+        status = "disconnected" if rc == 0 else "error"
+        self._emit_status(status, {"disconnect_rc": rc})
+        if rc == 0:
+            print(f"[{self.device_name}] Disconnected cleanly")
+        else:
+            print(f"[{self.device_name}] Unexpected disconnect (rc={rc})")
+
+    def _on_subscribe(self, client, userdata, mid, granted_qos):
+        self._emit_status("subscribed", {"mid": mid, "granted_qos": granted_qos})
+
+    def _on_message(self, client, userdata, msg):
+        try:
+            payload = msg.payload
+            if self.decode == "utf8" or (self.decode == "auto" and self._looks_text(payload)):
+                try:
+                    payload = payload.decode("utf-8")
+
+                    payload = payload.replace("NaN", "null").replace("nan", "null") # nan is not recognized in json python 
+
+                    if payload and payload[0] in "{[":
+                        payload = json.loads(payload)
+                except Exception as e:
+                    print(f"[{self.device_name}] Payload decode failed: {e}")
+            out = {
+                "data": payload,
+                "timestamp": datetime.now().strftime(strfmt),
+                "topic": msg.topic
+            }
+            self.last_output = out
+            self.socketio.emit(f"{self.device_name}_mqtt_update", out)
+        except Exception as e:
+            print(f"[{self.device_name}] on_message failed: {e}")
+
+    ## --- helpers ---
+    def _emit_status(self, status, extra=None):
+        data = {"status": status, "device": self.device_name}
+        if extra:
+            data.update(extra)
+        try:
+            self.socketio.emit(f"{self.device_name}_status_update", data)
+        except Exception as e:
+            print(f"[{self.device_name}] emit_status failed: {e}")
+
+    @staticmethod
+    def _looks_text(b: bytes):
+        try:
+            if not b:
+                return True
+            high = sum(ch >= 0x80 for ch in b[:64])
+            nuls = b[:64].count(0)
+            return (high + nuls) <= 2
+        except Exception as e:
+            print(f"[looks_text] Error: {e}")
+            return True
 
 class ControlScheduler:
     def __init__(self, socketio, device_name, device_ip, schedule_config, control_callback, check_state_callback):
@@ -245,6 +443,9 @@ def load_all_plugins(app, socketio):
             if hasattr(module, 'register_serial_sockets'):
                 module.register_serial_sockets(SerialReader, socketio, app)
                 print(f" * {module_name} serial sockets started")
+            if hasattr(module, 'register_mqtt_sockets'):
+                module.register_mqtt_sockets(mqttBridge, socketio, app)
+                print(f" * {module_name} mqtt sockets started")
             if hasattr(module, 'register_control_scheduler_sockets'):
                 module.register_control_scheduler_sockets(ControlScheduler, socketio, app)
                 print(f" * {module_name} Control Schedulers started")
@@ -257,5 +458,5 @@ def load_all_plugins(app, socketio):
 def reload_plugins(app, socketio):
     for module_name,module in module_list.items():
         if hasattr(module, 'reload_routine'):
-            module.reload_routine(SerialReader, ControlScheduler, socketio, app)
+            module.reload_routine(socketio, app)
             print(f"{module_name} plugins/sockets reloaded")
