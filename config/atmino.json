@@ -4,7 +4,7 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "192.168.2.79"
+        "set_to": "10.0.1.18"
     },
     "mqtt_broker_port": {
         "label": "MQTT Port",
