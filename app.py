@@ -42,7 +42,7 @@ def configure_wifi():
 
     if not ssid:
         flash("⚠️ SSID is required.", "error")
-        return redirect(url_for("settings"))
+        return redirect(url_for("home"))
 
     try:
         # Example using nmcli (you might adapt based on your setup)
@@ -50,12 +50,12 @@ def configure_wifi():
         flash(f"✅ Connected to {ssid}. Restarting system...", "success")
     except subprocess.CalledProcessError as e:
         flash(f"❌ Failed to connect to {ssid}: {e}", "error")
-        return redirect(url_for("settings"))
+        return redirect(url_for("home"))
 
     # ✅ Restart the Raspberry Pi
     subprocess.Popen(["sudo", "reboot"])
 
-    return redirect(url_for("settings"))
+    return redirect(url_for("home"))
 
 
 @app.route("/scan_wifi")

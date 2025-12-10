@@ -1,1 +1,11 @@
-{}
+{
+
+    "camera_server": {
+        "label": "camera server",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "http://campi.local:5000"
+    }
+
+}
