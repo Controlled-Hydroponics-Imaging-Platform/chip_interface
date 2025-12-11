@@ -36,10 +36,10 @@ def process_driver_data(raw_serial_output):
     # Parse stepper motor blocks
     motor_pattern = re.compile(
         r"([xyz])\(StepperMotor\):"
-        r"([\d\.]+)\(rpm\),"
+        r"(-?\d+(?:\.\d+)?)\(rpm\),"   # speed_rpm: optional -, int or float
         r"([+-]),"
-        r"([\d\.]+)\(rev\),"
-        r"(\d+)\(steps\)"
+        r"(-?\d+(?:\.\d+)?)\(rev\),"   # position_rev
+        r"(-?\d+)\(steps\)"            # position_step
     )
 
     for axis, rpm, direction, rev, steps in motor_pattern.findall(raw_serial_output):
