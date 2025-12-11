@@ -1,5 +1,14 @@
 {
-
+    "driver_serial": {
+        "label": "Chip motor driver port",
+        "type": "serial_port",
+        "value_type": "text",
+        "values": [],
+        "set_to": "",
+        "baud_rate": 9600,
+        "timeout": 1,
+        "poll_rate": 3
+    },
     "camera_server": {
         "label": "camera server",
         "type": "text",
