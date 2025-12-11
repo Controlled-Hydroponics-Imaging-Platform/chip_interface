@@ -16,7 +16,7 @@
         "values": [
             ""
         ],
-        "set_to": "",
+        "set_to": "10.0.1.72",
         "schedule": [
             {
                 "days": [
@@ -32,7 +32,7 @@
                 "end": "06:35"
             }
         ],
-        "auto_enabled": true
+        "auto_enabled": false
     },
     "Light": {
         "label": "LED Light",
@@ -41,7 +41,7 @@
         "values": [
             ""
         ],
-        "set_to": "",
+        "set_to": "10.0.1.97",
         "schedule": [
             {
                 "days": [
@@ -57,6 +57,6 @@
                 "end": "22:30"
             }
         ],
-        "auto_enabled": true
+        "auto_enabled": false
     }
 }
