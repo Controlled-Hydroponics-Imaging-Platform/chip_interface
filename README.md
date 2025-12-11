@@ -8,6 +8,19 @@ Extendable and modular interface for controlled hydroponics platforms
 - Scheduling interfacess
 - MQTT Backend-front end bridging
 
+## Quick start installation
+```
+sudo apt install python3-venv
+python3 -m venv venv
+
+source venv/bin/activate
+
+pip install --upgrade -r pip.txt
+
+python app.py
+
+```
+
 ## Structure
 
 /CHIP_INTERFACE
