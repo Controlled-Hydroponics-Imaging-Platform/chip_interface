@@ -1,5 +1,5 @@
 {
-    "driver_serial": {
+    "motor_driver": {
         "label": "Chip motor driver port",
         "type": "serial_port",
         "value_type": "text",

@@ -13,6 +13,7 @@ plugin_blueprint = Blueprint('spatial',
 
 panel_association = "Spatial"
 
+scripts =["spatial.js"]
 
 serial_reader_alias = None
 serial_device_list = {}
