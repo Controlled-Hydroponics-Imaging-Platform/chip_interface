@@ -18,6 +18,83 @@
         margin: 0 auto;
         object-fit: contain; 
     }
+
+
+    /* Container + card */
+    .position-info-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    /* Title */
+    .position-info-section > h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    }
+
+    /* Connection status */
+    .motion-status {
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    }
+    .motion-status.connected {
+    border-color: #22c55e;
+    background: #f0fdf4;
+    color: #14532d;
+    }
+    .motion-status.disconnected {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #7f1d1d;
+    }
+
+    /* Message box */
+    .motion-message {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    overflow-x: auto;
+    }
+
+    /* Key–value renderer used by the plugin */
+    .kv-list {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 6px 10px;
+    }
+    .kv-row { display: contents; }
+    .kv-row .k { font-weight: 600; color: #334155; }
+    .kv-row .v { color: #0f172a; }
+
+    .meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 6px;
+    }    
+
+    /* Optional: compact on small screens */
+    @media (max-width: 640px) {
+    .kv-list { grid-template-columns: 1fr; }
+    }
+
 </style>
 
 
@@ -29,6 +106,8 @@
     <img id="video" src="{{panel_config["camera_server"]["set_to"]}}/video_feed">
 </div>
 
-<div>
-    
+<div class="position-info-section">
+    <h3>Position Information</h3>
+    <div class="motion-status" data-device="motor_driver"></div>
+    <div class="motion-message" data-device="motor_driver">Waiting for data...</div>
 </div>

@@ -4,10 +4,10 @@
         "type": "serial_port",
         "value_type": "text",
         "values": [],
-        "set_to": "",
+        "set_to": "/dev/ttyACM0",
         "baud_rate": 9600,
         "timeout": 1,
-        "poll_rate": 3
+        "poll_rate": 1
     },
     "camera_server": {
         "label": "camera server",
@@ -16,5 +16,4 @@
         "values": [],
         "set_to": "http://campi.local:5000"
     }
-
 }
