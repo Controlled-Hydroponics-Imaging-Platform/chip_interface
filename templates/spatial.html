@@ -95,6 +95,83 @@
     .kv-list { grid-template-columns: 1fr; }
     }
 
+
+    /* ===== Axis table (x / y / z layout) ===== */
+
+    .axis-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;                 /* vertical breathing room */
+    margin-top: 4px;
+    }
+
+    /* Each row */
+    .axis-row {
+    display: grid;
+    grid-template-columns: 160px repeat(3, minmax(60px, 1fr));
+    align-items: center;
+    column-gap: 12px;
+    padding: 4px 0;
+    }
+
+    /* Header row */
+    .axis-header {
+    font-weight: 600;
+    font-size: 12px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    }
+
+    /* Left-side labels (direction, speed_rpm, etc.) */
+    .axis-label {
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+    }
+
+    /* Value cells */
+    .axis-col {
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    }
+
+    /* Alternating rows for readability */
+    .axis-row:not(.axis-header):nth-child(even) .axis-col {
+    background: #ffffff;
+    }
+
+    /* Status coloring (optional but very helpful visually) */
+    .axis-col:has(:not(:empty)) {
+    font-weight: 500;
+    }
+
+    .axis-col:where(:contains("standby")) {
+    color: #64748b;
+    }
+
+    .axis-col:where(:contains("off")) {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fecaca;
+    }
+
+    /* ===== Small screens ===== */
+    @media (max-width: 640px) {
+    .axis-row {
+        grid-template-columns: 120px repeat(3, 1fr);
+        font-size: 12px;
+    }
+
+    .axis-col {
+        padding: 3px 4px;
+    }
+    }
+
 </style>
 
 
