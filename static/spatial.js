@@ -103,17 +103,55 @@ window.pluginRegistry.push({
                 const msgEl = s.msgEl;
                 msgEl.innerHTML = "";
 
+                // if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+                //     const list = document.createElement("div");
+                //     list.className = "kv-list";
+                //     Object.entries(payload).forEach(([k, v]) => {
+                //         const row = document.createElement("div");
+                //         row.className = "kv-row";
+                //         row.innerHTML = `<span class="k">${escapeHtml(k)}</span><span class="v">${formatVal(v)}</span>`;
+                //         list.appendChild(row);
+                //     });
+
+                //     msgEl.appendChild(list);
+                
                 if (payload && typeof payload === "object" && !Array.isArray(payload)) {
-                    const list = document.createElement("div");
-                    list.className = "kv-list";
-                    Object.entries(payload).forEach(([k, v]) => {
-                        const row = document.createElement("div");
-                        row.className = "kv-row";
-                        row.innerHTML = `<span class="k">${escapeHtml(k)}</span><span class="v">${formatVal(v)}</span>`;
-                        list.appendChild(row);
+                    const axes = Object.keys(payload); // ["x","y","z"]
+
+                    // Collect all field names (direction, position_rev, ...)
+                    const fields = new Set();
+                    axes.forEach(axis => {
+                        Object.keys(payload[axis] || {}).forEach(f => fields.add(f));
                     });
 
-                    msgEl.appendChild(list);
+                    const table = document.createElement("div");
+                    table.className = "axis-table";
+
+                    // Header row
+                    const header = document.createElement("div");
+                    header.className = "axis-row axis-header";
+                    header.innerHTML =
+                        `<span class="axis-label"></span>` +
+                        axes.map(a => `<span class="axis-col">${escapeHtml(a)}</span>`).join("");
+                    table.appendChild(header);
+
+                    // Data rows
+                    fields.forEach(field => {
+                        const row = document.createElement("div");
+                        row.className = "axis-row";
+
+                        const label = `<span class="axis-label">${escapeHtml(field)}</span>`;
+                        const cols = axes.map(axis => {
+                            const val = payload[axis]?.[field];
+                            return `<span class="axis-col">${formatVal(val)}</span>`;
+                        }).join("");
+
+                        row.innerHTML = label + cols;
+                        table.appendChild(row);
+                    });
+
+                    msgEl.appendChild(table);
+
                 } else if (Array.isArray(payload)) {
                     const pre = document.createElement("pre");
                     pre.textContent = JSON.stringify(payload, null, 2);
