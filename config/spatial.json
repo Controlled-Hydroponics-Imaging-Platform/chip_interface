@@ -15,5 +15,50 @@
         "value_type": "text",
         "values": [],
         "set_to": "http://campi.local:5000"
+    },
+    "platform_x_extent": {
+        "label": "Platform length,x (cm)",
+        "type": "number",
+        "value_type": "number",
+        "values": [],
+        "set_to": 5
+    },
+    "platform_y_extent": {
+        "label": "Platform width,y (cm)",
+        "type": "number",
+        "value_type": "number",
+        "values": [],
+        "set_to": 5
+    },
+    "platform_z_extent": {
+        "label": "Platform height,z (cm)",
+        "type": "number",
+        "value_type": "number",
+        "values": [],
+        "set_to": 5
+    },
+    "x_axis_config":{
+        "label":"x axis configuration",
+        "type": "axis_configuration",
+        "extent_cm":"",
+        "mm_per_rev":"",
+        "home_direction": -1
+    },
+    "y_axis_config":{
+        "label":"y axis configuration",
+        "type": "axis_configuration",
+        "extent_cm":"",
+        "mm_per_rev":"",
+        "home_direction": 1
+    },
+    "z_axis_config":{
+        "label":"z axis configuration",
+        "type": "axis_configuration",
+        "extent_cm":"",
+        "mm_per_rev":"",
+        "home_direction": 1
     }
+
+
+
 }
