@@ -5,7 +5,7 @@
         "value_type": "text",
         "values": [],
         "set_to": "/dev/ttyACM0",
-        "baud_rate": 9600,
+        "baud_rate": 115200,
         "timeout": 1,
         "poll_rate": 1
     },
@@ -16,49 +16,25 @@
         "values": [],
         "set_to": "http://campi.local:5000"
     },
-    "platform_x_extent": {
-        "label": "Platform length,x (cm)",
-        "type": "number",
-        "value_type": "number",
-        "values": [],
-        "set_to": 5
-    },
-    "platform_y_extent": {
-        "label": "Platform width,y (cm)",
-        "type": "number",
-        "value_type": "number",
-        "values": [],
-        "set_to": 5
-    },
-    "platform_z_extent": {
-        "label": "Platform height,z (cm)",
-        "type": "number",
-        "value_type": "number",
-        "values": [],
-        "set_to": 5
-    },
-    "x_axis_config":{
-        "label":"x axis configuration",
+    "x_axis_config": {
+        "label": "x axis configuration",
         "type": "axis_configuration",
-        "extent_cm":"",
-        "mm_per_rev":"",
+        "extent_cm": 12,
+        "mm_per_rev": 14,
         "home_direction": -1
     },
-    "y_axis_config":{
-        "label":"y axis configuration",
+    "y_axis_config": {
+        "label": "y axis configuration",
         "type": "axis_configuration",
-        "extent_cm":"",
-        "mm_per_rev":"",
+        "extent_cm": 124,
+        "mm_per_rev": 5,
         "home_direction": 1
     },
-    "z_axis_config":{
-        "label":"z axis configuration",
+    "z_axis_config": {
+        "label": "z axis configuration",
         "type": "axis_configuration",
-        "extent_cm":"",
-        "mm_per_rev":"",
+        "extent_cm": 51,
+        "mm_per_rev": 52,
         "home_direction": 1
     }
-
-
-
 }

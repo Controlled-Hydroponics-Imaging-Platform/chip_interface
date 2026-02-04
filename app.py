@@ -179,21 +179,31 @@ def configure(panel):
 
     if request.method == "POST":
         # Process form submission
+        ## Typically u can add configs that are a generic text or number type, and create parameters label, type, value_type, and set_to for quick, but if you have plugin specific parameters, you will need to add to this code under type param  
         new_config = config_params
         for key, params in config_params.items():
-            user_input = request.form.get(key, "")
 
-            if params["value_type"] == "number":
-                new_config[key]["set_to"] = int(user_input)
-            else:
-                new_config[key]["set_to"] = user_input
+            ## Generic Parameter config through value_type 
+            if "value_type" in params:
+                user_input = request.form.get(key, "")
 
+                if params["value_type"] == "number":
+                    new_config[key]["set_to"] = int(user_input)
+                else:
+                    new_config[key]["set_to"] = user_input
+
+            ## Plugin Specific Configuration parameters
             if params["type"] == "kasa_plug":
                 new_config[key]["auto_enabled"]=  True if request.form.get(f"{key}_auto") =="on" else False 
             elif params["type"] == "serial_port":
                 new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
                 new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
                 new_config[key]["poll_rate"]=  int(request.form.get(f"{key}_poll"))
+            elif params["type"] == "axis_configuration":
+                new_config[key]["extent_cm"] = int(request.form.get(f"{key}_extent_cm"))
+                new_config[key]["mm_per_rev"] = int(request.form.get(f"{key}_mm_per_rev"))
+                new_config[key]["home_direction"] = int(request.form.get(f"{key}_home_direction"))
+
 
 
         # Save the updated config back to JSON

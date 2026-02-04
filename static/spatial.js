@@ -85,9 +85,6 @@ window.pluginRegistry.push({
                 // Normalize possible string payloads
                 if (typeof payload === "string") {
                     let stext = payload.trim();
-                    // if (topic && stext.startsWith(topic)) {
-                    //     stext = stext.slice(topic.length).trim();
-                    // }
                     const cleaned = stext
                         .replace(/\bNaN\b/gi, "null")
                         .replace(/\bInfinity\b/gi, "null")
@@ -102,18 +99,6 @@ window.pluginRegistry.push({
                 // Render
                 const msgEl = s.msgEl;
                 msgEl.innerHTML = "";
-
-                // if (payload && typeof payload === "object" && !Array.isArray(payload)) {
-                //     const list = document.createElement("div");
-                //     list.className = "kv-list";
-                //     Object.entries(payload).forEach(([k, v]) => {
-                //         const row = document.createElement("div");
-                //         row.className = "kv-row";
-                //         row.innerHTML = `<span class="k">${escapeHtml(k)}</span><span class="v">${formatVal(v)}</span>`;
-                //         list.appendChild(row);
-                //     });
-
-                //     msgEl.appendChild(list);
                 
                 if (payload && typeof payload === "object" && !Array.isArray(payload)) {
                     const axes = Object.keys(payload); // ["x","y","z"]
@@ -179,8 +164,6 @@ window.pluginRegistry.push({
         // Socket transport hooks as a fallback
         socket.on("connect", () => {
             devices.forEach(name => {
-                // Transport connected doesn't guarantee MQTT connected,
-                // but show "Connecting..." until we see a device event.
                 setStatus(name, "Connecting...", null);
             });
         });

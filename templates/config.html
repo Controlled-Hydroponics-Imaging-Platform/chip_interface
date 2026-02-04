@@ -79,12 +79,13 @@
                     <br>
                     <span>motor mm per rev: </span><input type="number" name="{{ key }}_mm_per_rev" id="{{ key }}_mm_per_rev" value="{{ setting["mm_per_rev"] }}">
                     <br>
+                    Direction to home:
                     <span style="margin-left: 10px; color: gray;">{{ "+" if setting["home_direction"] == 1 else "-" if setting["home_direction"] == -1 else "" }}</span>
                     <select class="home-direction" name="{{ key }}_home_direction" id="{{ key }}_home_direction" data-selected="{{ setting['home_direction'] }}">
-                        <option value=1 {% if value == setting["home_direction"] %}selected{% endif %}>
+                        <option value=1 {% if setting["home_direction"] == 1 %}selected{% endif %}>
                                 +
                         </option>
-                        <option value=-1 {% if value == setting["home_direction"] %}selected{% endif %}>
+                        <option value=-1 {% if setting["home_direction"] == -1 %}selected{% endif %}>
                                 -
                         </option>
                     </select>
