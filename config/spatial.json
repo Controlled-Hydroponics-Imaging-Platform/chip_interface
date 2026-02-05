@@ -7,7 +7,7 @@
         "set_to": "/dev/ttyACM0",
         "baud_rate": 115200,
         "timeout": 1,
-        "poll_rate": 1
+        "poll_rate": 0.1
     },
     "camera_server": {
         "label": "camera server",

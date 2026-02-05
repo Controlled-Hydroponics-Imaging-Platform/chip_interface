@@ -198,7 +198,7 @@ def configure(panel):
             elif params["type"] == "serial_port":
                 new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
                 new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
-                new_config[key]["poll_rate"]=  int(request.form.get(f"{key}_poll"))
+                new_config[key]["poll_rate"]=  float(request.form.get(f"{key}_poll"))
             elif params["type"] == "axis_configuration":
                 new_config[key]["extent_cm"] = int(request.form.get(f"{key}_extent_cm"))
                 new_config[key]["mm_per_rev"] = int(request.form.get(f"{key}_mm_per_rev"))
