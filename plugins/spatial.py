@@ -93,6 +93,25 @@ def register_serial_sockets(SerialReader, socketio, app):
             serial_device.start()
             serial_device_list[serial_device.device_name]= serial_device
 
+
+def register_socket_handlers(socketio):
+    @socketio.on("joystick_xyz")
+    def joystick_xyz(msg):
+        print(msg)
+
+        device = msg["device"]
+        x = msg["x"]
+        y = msg["y"]
+        z = msg["z"]
+
+        serial_device_list[device].write(f"move x,{x} y,{y} z,{z}")
+
+
+
+    return "joystick_xyz"
+
+
+
 # def reload_routine(socketio, app):
 def reload_routine(socketio, app):
     global serial_device_list, serial_reader_alias
@@ -127,3 +146,4 @@ def get_serial_data():
 
 
     return jsonify(output_data)  # Return JSON response
+

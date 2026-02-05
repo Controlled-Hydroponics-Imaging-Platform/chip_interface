@@ -505,6 +505,9 @@ def load_all_plugins(app, socketio):
             if hasattr(module, 'register_control_scheduler_sockets'):
                 module.register_control_scheduler_sockets(ControlScheduler, socketio, app)
                 print(f" * {module_name} Control Schedulers started")
+            if hasattr(module, 'register_socket_handlers'):
+                out = module.register_socket_handlers(socketio)
+                print(f" * {module_name} socket handlers registered, listening on:{out}")
             if hasattr(module, 'scripts'):
                 for script in module.scripts: script_list.append(script)
                 print(f" * {', '.join(script for script in module.scripts)} scripts will be loaded")

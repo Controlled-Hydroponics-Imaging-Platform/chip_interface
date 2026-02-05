@@ -205,5 +205,141 @@ window.pluginRegistry.push({
             }
             return escapeHtml(String(v));
         }
+
+        ///////////////// Motion Joystick Functionality /////////////////////
+
+        document.querySelectorAll(".control-panel").forEach((panel) => {
+        const device = panel.getAttribute("control-device");
+        if (!device) {
+            console.warn("Missing control-device on panel", panel);
+            return;
+        }
+
+        const joy  = panel.querySelector(".joy");
+        const knob = panel.querySelector(".knob");
+        const out  = panel.querySelector(".out");
+        const btn  = panel.querySelector(".joyToggle");
+        const zUp  = panel.querySelector(".z-up");
+        const zDown= panel.querySelector(".z-down");
+
+        if (!joy || !knob || !out || !btn || !zUp || !zDown) {
+            console.warn("Panel missing joystick elements for device:", device);
+            return;
+        }
+
+        let joystickEnabled = false;
+        let sendTimer = null;
+
+        let x = 0, y = 0, z = 0;
+
+        const SEND_HZ = 20;
+        const SEND_MS = 1000 / SEND_HZ;
+
+        function deadzone(v, dz = 0.05) {
+            return Math.abs(v) < dz ? 0 : v;
+        }
+
+        function sendXYZ() {
+            
+            const payload = {
+                device,
+                enabled: joystickEnabled,
+                x: deadzone(x),
+                y: deadzone(y),
+                z,
+                ts: Date.now()
+            };
+            console.log(payload);
+            socket.emit("joystick_xyz", payload);
+        }
+
+        function startSending() {
+            if (sendTimer) return;
+            sendTimer = setInterval(sendXYZ, SEND_MS);
+            sendXYZ();
+        }
+
+        function stopSending() {
+            if (sendTimer) {
+            clearInterval(sendTimer);
+            sendTimer = null;
+            }
+            x = 0; y = 0; z = 0;
+            socket.emit("joystick_xyz", { device, enabled: false, x: 0, y: 0, z: 0, ts: Date.now() });
+            updateOutput();
+        }
+
+        function updateOutput() {
+            out.textContent = `(${device}) x=${x.toFixed(2)} y=${y.toFixed(2)} z=${z.toFixed(2)}`;
+        }
+
+        // Toggle button
+        btn.addEventListener("click", () => {
+            joystickEnabled = !joystickEnabled;
+            btn.textContent = joystickEnabled ? "Joystick Mode: ON" : "Joystick Mode: OFF";
+            joystickEnabled ? startSending() : stopSending();
+        });
+
+        // XY joystick
+        const radius = joy.clientWidth / 2;
+        const knobR  = knob.clientWidth / 2;
+        const max = radius - knobR;
+
+        let active = false, pointerId = null;
+
+        function setKnob(dx, dy) {
+            const len = Math.hypot(dx, dy);
+            if (len > max) {
+            dx = dx / len * max;
+            dy = dy / len * max;
+            }
+            knob.style.transform = `translate(${dx}px, ${dy}px) translate(-50%, -50%)`;
+            x = dx / max;
+            y = -dy / max;
+            updateOutput();
+        }
+
+        function center() {
+            knob.style.transform = `translate(0px,0px) translate(-50%, -50%)`;
+            x = 0; y = 0;
+            updateOutput();
+        }
+
+        joy.addEventListener("pointerdown", (e) => {
+            if (!joystickEnabled) return;
+            active = true;
+            pointerId = e.pointerId;
+            joy.setPointerCapture(pointerId);
+        });
+
+        joy.addEventListener("pointermove", (e) => {
+            if (!joystickEnabled || !active || e.pointerId !== pointerId) return;
+            const r = joy.getBoundingClientRect();
+            setKnob(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+        });
+
+        joy.addEventListener("pointerup", (e) => {
+            if (e.pointerId !== pointerId) return;
+            active = false;
+            pointerId = null;
+            center();
+        });
+
+        joy.addEventListener("pointercancel", center);
+
+        // Z buttons
+        function zSet(val) { z = val; updateOutput(); }
+
+        zUp.addEventListener("pointerdown", () => { if (joystickEnabled) zSet(1); });
+        zDown.addEventListener("pointerdown", () => { if (joystickEnabled) zSet(-1); });
+
+        ["pointerup", "pointercancel", "pointerleave"].forEach(ev => {
+            zUp.addEventListener(ev, () => zSet(0));
+            zDown.addEventListener(ev, () => zSet(0));
+        });
+
+        updateOutput();
+        });
+
     }
 });
