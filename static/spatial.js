@@ -62,11 +62,11 @@ window.pluginRegistry.push({
                 // const broker = data?.broker ? ` (${data.broker})` : "";
                 const status = data?.status || "unknown";
                 if (status === "connected") {
-                    setStatus(deviceName, `Connected${deviceName}`, "connected");
+                    setStatus(deviceName, `Connected ${deviceName}`, "connected");
                 } else if (status === "connecting") {
-                    setStatus(deviceName, `Connecting${deviceName}...`, null);
+                    setStatus(deviceName, `Connecting ${deviceName}...`, null);
                 } else if (status === "disconnected") {
-                    setStatus(deviceName, `Disconnected${deviceName}`, "disconnected");
+                    setStatus(deviceName, `Disconnected ${deviceName}`, "disconnected");
                 } else if (status === "error") {
                 const err = data?.error ? `: ${data.error}` : "";
                     setStatus(deviceName, `Error${deviceName}${err}`, "disconnected");
