@@ -111,8 +111,6 @@ def register_socket_handlers(socketio):
     return "joystick_xyz"
 
 
-
-# def reload_routine(socketio, app):
 def reload_routine(socketio, app):
     global serial_device_list, serial_reader_alias
 
