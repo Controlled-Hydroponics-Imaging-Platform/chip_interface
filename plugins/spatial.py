@@ -6,6 +6,7 @@ import os, json, re
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
+from lib.motion_planner import gantry_planner
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
