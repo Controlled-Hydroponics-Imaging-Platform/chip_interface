@@ -6,7 +6,7 @@ import os, json, re
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
-from lib.motion_planner import gantry_planner
+from lib.motion_planner import gantry_planner as gp
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
@@ -18,6 +18,7 @@ scripts =["spatial.js"]
 
 serial_reader_alias = None
 serial_device_list = {}
+linear_gantry_device_list = {}
 
 def process_driver_data(raw_serial_output):
     # Example raw input: [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
@@ -73,7 +74,7 @@ def load_config(root_path, config_file):
             return {}
 
 def register_serial_sockets(SerialReader, socketio, app):
-    global serial_device_list, serial_reader_alias
+    global serial_device_list, serial_reader_alias, linear_gantry_device_list
 
     serial_reader_alias = SerialReader
 
@@ -93,6 +94,18 @@ def register_serial_sockets(SerialReader, socketio, app):
             
             serial_device.start()
             serial_device_list[serial_device.device_name]= serial_device
+        elif param["type"] == "linear_gantry_config":
+
+            linear_gantry_device = gp.LinearGantryPlanner( limits = param["frame_limits_mm"], 
+                            home_dirs = param["home_direction"] , 
+                            mm_per_revs = param["mm_per_rev"], 
+                            default_home_pose= param["default_home_pose"], 
+                            max_speed =  param["max_linear_vel"], #in mm/s
+                            )
+            
+            linear_gantry_device_list[param["associated_serial_device"]] = linear_gantry_device
+
+
 
 
 def register_socket_handlers(socketio):
@@ -105,7 +118,12 @@ def register_socket_handlers(socketio):
         y = msg["y"]
         z = msg["z"]
 
-        serial_device_list[device].write(f"move x,{x} y,{y} z,{z}")
+        out =linear_gantry_device_list[device].move([x,y,z], 10)
+
+        # out = motion_platform_planner.move([x,y,z], 5)
+
+        if out:
+            serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
 
 
 
@@ -113,12 +131,13 @@ def register_socket_handlers(socketio):
 
 
 def reload_routine(socketio, app):
-    global serial_device_list, serial_reader_alias
+    global serial_device_list, serial_reader_alias, linear_gantry_device_list
 
     # Kill serial devices
     for device in serial_device_list.values():
         device.kill()
     serial_device_list.clear()
+    linear_gantry_device_list.clear()
 
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)

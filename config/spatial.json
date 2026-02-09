@@ -16,25 +16,30 @@
         "values": [],
         "set_to": "http://campi.local:5000"
     },
-    "x_axis_config": {
-        "label": "x axis configuration",
-        "type": "axis_configuration",
-        "extent_cm": 12,
-        "mm_per_rev": 14,
-        "home_direction": -1
-    },
-    "y_axis_config": {
-        "label": "y axis configuration",
-        "type": "axis_configuration",
-        "extent_cm": 124,
-        "mm_per_rev": 5,
-        "home_direction": 1
-    },
-    "z_axis_config": {
-        "label": "z axis configuration",
-        "type": "axis_configuration",
-        "extent_cm": 51,
-        "mm_per_rev": 52,
-        "home_direction": 1
+    "motor_driver_motion_config": {
+        "label": "motion_platform configuration",
+        "type": "linear_gantry_config",
+        "associated_serial_device": "motor_driver",
+        "frame_limits_mm": {
+            "x": 124.0,
+            "y": 124.0,
+            "z": 124.0
+        },
+        "mm_per_rev": {
+            "x": 64.0,
+            "y": 64.0,
+            "z": 8.0
+        },
+        "home_direction": {
+            "x": -1,
+            "y": 1,
+            "z": 1
+        },
+        "default_home_pose": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        "max_linear_vel": 100.0
     }
 }

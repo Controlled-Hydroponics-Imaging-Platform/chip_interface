@@ -199,12 +199,28 @@ def configure(panel):
                 new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
                 new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
                 new_config[key]["poll_rate"]=  float(request.form.get(f"{key}_poll"))
-            elif params["type"] == "axis_configuration":
-                new_config[key]["extent_cm"] = int(request.form.get(f"{key}_extent_cm"))
-                new_config[key]["mm_per_rev"] = int(request.form.get(f"{key}_mm_per_rev"))
-                new_config[key]["home_direction"] = int(request.form.get(f"{key}_home_direction"))
+            elif params["type"] == "linear_gantry_config":
+                new_config[key]["associated_serial_device"] = request.form.get(f"{key}_associated_serial_device")
 
+                new_config[key]["frame_limits_mm"]["x"] = float(request.form.get(f"{key}_frame_limit_mm_x"))
+                new_config[key]["frame_limits_mm"]["y"] = float(request.form.get(f"{key}_frame_limit_mm_y"))
+                new_config[key]["frame_limits_mm"]["z"] = float(request.form.get(f"{key}_frame_limit_mm_z"))
+                
+                new_config[key]["mm_per_rev"]["x"] = float(request.form.get(f"{key}_mm_per_rev_x"))
+                new_config[key]["mm_per_rev"]["y"] = float(request.form.get(f"{key}_mm_per_rev_y"))
+                new_config[key]["mm_per_rev"]["z"] = float(request.form.get(f"{key}_mm_per_rev_z"))
 
+                new_config[key]["home_direction"]["x"] = int(request.form.get(f"{key}_home_direction_x"))
+                new_config[key]["home_direction"]["y"] = int(request.form.get(f"{key}_home_direction_y"))
+                new_config[key]["home_direction"]["z"] = int(request.form.get(f"{key}_home_direction_z"))
+
+                new_config[key]["default_home_pose"]["x"] = float(request.form.get(f"{key}_default_home_pose_x"))
+                new_config[key]["default_home_pose"]["y"] = float(request.form.get(f"{key}_default_home_pose_y"))
+                new_config[key]["default_home_pose"]["z"] = float(request.form.get(f"{key}_default_home_pose_z"))
+                
+                new_config[key]["max_linear_vel"] = float(request.form.get(f"{key}_max_linear_vel"))
+                
+                
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
