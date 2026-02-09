@@ -92,3 +92,8 @@ class LinearGantryPlanner:
             self.curr_pose = np.array([0.0, 0.0, 0.0], dtype=float)
 
         return out
+    
+    def get_current_pose(self):
+
+        out = {'x':float(self.curr_pose[0]),'y': float(self.curr_pose[1]),'z':float(self.curr_pose[2])}
+        return out
