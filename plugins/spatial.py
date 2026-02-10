@@ -128,15 +128,15 @@ def register_socket_handlers(socketio):
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
             time.sleep(0.01)
     
-    @socketio.on("moveto_xyz")
+    @socketio.on("moveto_xyzv")
     def move_to_xyz(msg):
         print(msg)
         device =msg["device"]
         x = float(msg["x"]) 
         y = float(msg["y"]) 
         z = float(msg["z"])
-
-        out =linear_gantry_device_list[device].move_to([x,y,z], 80)
+        vel = float(msg["v"])
+        out =linear_gantry_device_list[device].move_to([x,y,z], vel)
         
         if out:
             serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
