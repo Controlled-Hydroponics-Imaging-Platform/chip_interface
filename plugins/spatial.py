@@ -124,9 +124,9 @@ def register_socket_handlers(socketio):
 
         if out:
             serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-            time.sleep(0.001)
+            time.sleep(0.01)
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
-            time.sleep(0.001)
+            time.sleep(0.01)
 
 
 
