@@ -59,7 +59,7 @@ class LinearGantryPlanner:
 
         out = {
             'delta_q':{'x':float(delta_q[0]),'y': float(delta_q[1]),'z':float(delta_q[2])},
-            'q_dot': {'x':float(q_dot[0]), 'y':float(q_dot[1]), 'z': float(q_dot[2]) },
+            'q_dot': {'x':int(q_dot[0]), 'y':int(q_dot[1]), 'z': int(q_dot[2]) },
             't_s': float(t),
             "distance": float(distance)
         }

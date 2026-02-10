@@ -137,8 +137,9 @@ def register_socket_handlers(socketio):
         z = float(msg["z"])
         vel = float(msg["v"])
         out =linear_gantry_device_list[device].move_to([x,y,z], vel)
-        
         if out:
+            print(out)
+
             serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
             time.sleep(0.01)
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
