@@ -114,9 +114,9 @@ def register_socket_handlers(socketio):
         # print(msg)
 
         device = msg["device"]
-        x = float(msg["x"]) *10 #convert to cm
-        y = float(msg["y"]) *10 #convert to cm
-        z = float(msg["z"]) *10 #convert to cm
+        x = float(msg["x"]) *5 #convert to arbitrary scaling
+        y = float(msg["y"]) *5 #convert to arbitrary scaling
+        z = float(msg["z"]) *5 #convert to arbitrary scaling
 
         out =linear_gantry_device_list[device].move([x,y,z], 80)
 
