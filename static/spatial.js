@@ -209,9 +209,9 @@ window.pluginRegistry.push({
         ///////////////// Motion Joystick Functionality /////////////////////
 
         document.querySelectorAll(".joystick-control-panel").forEach((panel) => {
-        const device = panel.getAttribute("joystick-control-device");
+        const device = panel.getAttribute("control-device");
         if (!device) {
-            console.warn("Missing joystick-control-device on panel", panel);
+            console.warn("Missing control-device on panel", panel);
             return;
         }
 

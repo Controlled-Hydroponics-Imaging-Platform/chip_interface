@@ -321,7 +321,7 @@
     <div class="motion-message" data-device="motor_driver">Waiting for data...</div>
 </div>
 
-<div class="joystick-control-panel" control-device="motor_driver">
+<!-- <div class="joystick-control-panel" control-device="motor_driver">
   <button class="joyToggle">Joystick Mode: OFF</button>
 
   <div class="joy">
@@ -334,28 +334,28 @@
   </div>
 
   <div class="out"></div>
-</div>
+</div> -->
 
 
 <div class="moveto-control-panel" control-device="motor_driver">
   <div class="moveto-row">
     <label>X</label>
-    <input class="moveto-x" type="number" step="0.001" placeholder="mm">
+    <input class="moveto-x" type="number" step="1" placeholder="mm">
   </div>
 
   <div class="moveto-row">
     <label>Y</label>
-    <input class="moveto-y" type="number" step="0.001" placeholder="mm">
+    <input class="moveto-y" type="number" step="1" placeholder="mm">
   </div>
 
   <div class="moveto-row">
     <label>Z</label>
-    <input class="moveto-z" type="number" step="0.001" placeholder="mm">
+    <input class="moveto-z" type="number" step="1" placeholder="mm">
   </div>
 
   <div class="moveto-row">
     <label>Velocity</label>
-    <input class="moveto-v" type="number" step="0.1" min="0" placeholder="mm/s">
+    <input class="moveto-v" type="number" step="1" min="0" placeholder="mm/s">
   </div>
 
   <button class="moveto-send">Send</button>

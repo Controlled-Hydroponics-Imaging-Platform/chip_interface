@@ -21,9 +21,9 @@
         "type": "linear_gantry_config",
         "associated_serial_device": "motor_driver",
         "frame_limits_mm": {
-            "x": 124.0,
-            "y": 124.0,
-            "z": 124.0
+            "x": 1100.0,
+            "y": 500.0,
+            "z": 300.0
         },
         "mm_per_rev": {
             "x": 64.0,
