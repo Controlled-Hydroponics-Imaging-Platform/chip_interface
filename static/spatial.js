@@ -232,7 +232,7 @@ window.pluginRegistry.push({
 
         let x = 0, y = 0, z = 0;
 
-        const SEND_HZ = 20;
+        const SEND_HZ = 10;
         const SEND_MS = 1000 / SEND_HZ;
 
         function deadzone(v, dz = 0.05) {
