@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, url_for, current_app
 from flask_socketio import SocketIO
 import eventlet
 import serial
-import os, json, re
+import os, json, re, time
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
@@ -124,7 +124,9 @@ def register_socket_handlers(socketio):
 
         if out:
             serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+            time.sleep(0.001)
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+            time.sleep(0.001)
 
 
 
