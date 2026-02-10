@@ -114,11 +114,11 @@ def register_socket_handlers(socketio):
         # print(msg)
 
         device = msg["device"]
-        x = msg["x"]
-        y = msg["y"]
-        z = msg["z"]
+        x = float(msg["x"]) *10 #convert to cm
+        y = float(msg["y"]) *10 #convert to cm
+        z = float(msg["z"]) *10 #convert to cm
 
-        out =linear_gantry_device_list[device].move([x,y,z], 100)
+        out =linear_gantry_device_list[device].move([x,y,z], 80)
 
         # out = motion_platform_planner.move([x,y,z], 5)
 
