@@ -123,6 +123,7 @@ def register_socket_handlers(socketio):
         # out = motion_platform_planner.move([x,y,z], 5)
 
         if out:
+            serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
 
 
