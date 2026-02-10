@@ -118,7 +118,7 @@ def register_socket_handlers(socketio):
         y = msg["y"]
         z = msg["z"]
 
-        out =linear_gantry_device_list[device].move([x,y,z], 10)
+        out =linear_gantry_device_list[device].move([x,y,z], 50)
 
         # out = motion_platform_planner.move([x,y,z], 5)
 
