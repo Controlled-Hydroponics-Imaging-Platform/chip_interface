@@ -249,7 +249,7 @@ window.pluginRegistry.push({
                 z,
                 ts: Date.now()
             };
-            console.log(payload);
+            // console.log(payload);
             socket.emit("joystick_xyz", payload);
         }
 

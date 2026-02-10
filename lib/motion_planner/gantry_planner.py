@@ -46,7 +46,7 @@ class LinearGantryPlanner:
         distance = np.linalg.norm(delta_x)
 
         if distance <1e-9:
-            print(f'already at {target_pose}')
+            # print(f'already at {target_pose}')
             return
         if vel<=0:
             raise ValueError("vel must be > 0")

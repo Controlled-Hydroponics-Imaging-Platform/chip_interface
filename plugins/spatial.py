@@ -111,7 +111,7 @@ def register_serial_sockets(SerialReader, socketio, app):
 def register_socket_handlers(socketio):
     @socketio.on("joystick_xyz")
     def joystick_xyz(msg):
-        print(msg)
+        # print(msg)
 
         device = msg["device"]
         x = msg["x"]
