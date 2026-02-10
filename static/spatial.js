@@ -344,52 +344,64 @@ window.pluginRegistry.push({
 
         ///////////////// Move_to Functionality /////////////////////
         document.querySelectorAll(".moveto-control-panel").forEach(panel => {
-            const device = panel.getAttribute("control-device");
-            const xEl = panel.querySelector(".moveto-x");
-            const yEl = panel.querySelector(".moveto-y");
-            const zEl = panel.querySelector(".moveto-z");
-            const btn = panel.querySelector(".moveto-send");
-            const status = panel.querySelector(".moveto-status");
+        const device = panel.getAttribute("control-device");
 
-            function setStatus(msg){
-                if (status) status.textContent = msg;
+        const xEl = panel.querySelector(".moveto-x");
+        const yEl = panel.querySelector(".moveto-y");
+        const zEl = panel.querySelector(".moveto-z");
+        const vEl = panel.querySelector(".moveto-v");
+        const btn = panel.querySelector(".moveto-send");
+        const status = panel.querySelector(".moveto-status");
+
+        function setStatus(msg){
+            if (status) status.textContent = msg;
+        }
+
+        function parseNum(el){
+            const v = el.value.trim();
+            if (v === "") return null;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        btn.addEventListener("click", () => {
+            if (!device){
+            setStatus("missing device");
+            return;
             }
 
-            function parseNum(el){
-                const v = el.value.trim();
-                if (v === "") return null;
-                const n = Number(v);
-                return Number.isFinite(n) ? n : null;
+            const x = parseNum(xEl);
+            const y = parseNum(yEl);
+            const z = parseNum(zEl);
+            const v = parseNum(vEl);   // velocity mm/s
+
+            if (x === null || y === null || z === null || v === null){
+            setStatus("enter valid x y z v");
+            return;
+            }
+            if (v <= 0){
+            setStatus("velocity must be > 0");
+            return;
             }
 
-            btn.addEventListener("click", () => {
-                if (!device) {
-                console.warn("Missing control-device on moveto panel");
-                setStatus("missing device");
-                return;
-                }
+            const payload = {
+            device,
+            x, y, z,
+            v,              // mm/s
+            ts: Date.now()
+            };
 
-                const x = parseNum(xEl);
-                const y = parseNum(yEl);
-                const z = parseNum(zEl);
+            console.log("⬆️ emitting moveto_xyzv:", payload);
+            socket.emit("moveto_xyzv", payload);
+            setStatus(`sent (${x}, ${y}, ${z}) @ ${v} mm/s`);
+        });
 
-                if (x === null || y === null || z === null){
-                setStatus("enter valid x y z");
-                return;
-                }
-
-                const payload = { device, x, y, z, ts: Date.now() };
-                console.log("⬆️ emitting moveto_xyz:", payload);
-                socket.emit("moveto_xyz", payload);
-                setStatus(`sent (${x}, ${y}, ${z})`);
+        // Press Enter to send
+        [xEl, yEl, zEl, vEl].forEach(el => {
+            el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") btn.click();
             });
-
-            // Optional: hit Enter to send
-            [xEl, yEl, zEl].forEach(el => {
-                el.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") btn.click();
-                });
-            });
+        });
         });
 
     }
