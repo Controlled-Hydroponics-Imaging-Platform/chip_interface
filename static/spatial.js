@@ -493,6 +493,7 @@ window.pluginRegistry.push({
 
             function createRow(index){
                 const tr = document.createElement("tr");
+                tr.dataset.follow = "1";
                 const rowId = (window.crypto && crypto.randomUUID)
                     ? crypto.randomUUID()
                     : "row_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
@@ -513,6 +514,14 @@ window.pluginRegistry.push({
 
                 const savePosBtn = tr.querySelector(".save-pos");
                 const delBtn = tr.querySelector(".del-pos");
+
+                // If user edits X/Y/Z manually, stop follow mode
+                [".tx", ".ty", ".tz"].forEach(sel => {
+                    const input = tr.querySelector(sel);
+                    input.addEventListener("input", () => {
+                        tr.dataset.follow = "0";
+                    });
+                });
 
                 savePosBtn.addEventListener("click", () => {
                     if (!teaching) return;
@@ -600,25 +609,45 @@ window.pluginRegistry.push({
             }
 
             function autopopulateActiveRow() {
-            if (!teaching || !activeRowId) return;
+                if (!teaching || !activeRowId) return;
+                
+                // Optional safety: don’t fill if pose is stale
+                // if (lastPose.pose_is_stale) return;
 
-            // Optional safety: don’t fill if pose is stale
-            // if (lastPose.pose_is_stale) return;
+                if (![lastPose.x, lastPose.y, lastPose.z].every(Number.isFinite)) return;
 
-            if (![lastPose.x, lastPose.y, lastPose.z].every(Number.isFinite)) return;
+                const tr = rowsTbody.querySelector(`tr[data-row-id="${activeRowId}"]`);
+                if (!tr) return;
 
-            const tr = rowsTbody.querySelector(`tr[data-row-id="${activeRowId}"]`);
-            if (!tr) return;
+                // Only update if still in follow mode
+                if (tr.dataset.follow !== "1") return;
 
-            const tx = tr.querySelector(".tx");
-            const ty = tr.querySelector(".ty");
-            const tz = tr.querySelector(".tz");
-
-            // Only fill if empty (so user can override manually)
-            if (tx.value === "") tx.value = Math.round(lastPose.x);
-            if (ty.value === "") ty.value = Math.round(lastPose.y);
-            if (tz.value === "") tz.value = Math.round(lastPose.z);
+                tr.querySelector(".tx").value = lastPose.x.toFixed(2);
+                tr.querySelector(".ty").value = lastPose.y.toFixed(2);
+                tr.querySelector(".tz").value = lastPose.z.toFixed(2);
             }
+
+
+            // function autopopulateActiveRow() {
+            // if (!teaching || !activeRowId) return;
+
+            // // Optional safety: don’t fill if pose is stale
+            // // if (lastPose.pose_is_stale) return;
+
+            // if (![lastPose.x, lastPose.y, lastPose.z].every(Number.isFinite)) return;
+
+            // const tr = rowsTbody.querySelector(`tr[data-row-id="${activeRowId}"]`);
+            // if (!tr) return;
+
+            // const tx = tr.querySelector(".tx");
+            // const ty = tr.querySelector(".ty");
+            // const tz = tr.querySelector(".tz");
+
+            // // Only fill if empty (so user can override manually)
+            // if (tx.value === "") tx.value = Math.round(lastPose.x);
+            // if (ty.value === "") ty.value = Math.round(lastPose.y);
+            // if (tz.value === "") tz.value = Math.round(lastPose.z);
+            // }
 
 
             function startTeaching(){
