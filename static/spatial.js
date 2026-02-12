@@ -449,9 +449,294 @@ window.pluginRegistry.push({
                 });
             });
         
-        
-        
         });
+
+        ///////////////// Teach pendant Functionality /////////////////////
+
+        document.querySelectorAll(".teach-panel").forEach(panel => {
+            const device = panel.getAttribute("control-device");
+            const rowsTbody = panel.querySelector(".teach-rows");
+            const startBtn = panel.querySelector(".teach-start");
+            const stopBtn = panel.querySelector(".teach-stop");
+            const saveBtn = panel.querySelector(".teach-savejson");
+            const statusEl = panel.querySelector(".teach-status");
+
+            const curX = panel.querySelector(".teach-cur-x");
+            const curY = panel.querySelector(".teach-cur-y");
+            const curZ = panel.querySelector(".teach-cur-z");
+            const curStale = panel.querySelector(".teach-cur-stale");
+            const curTs = panel.querySelector(".teach-cur-ts");
+
+            let teaching = false;
+            let activeRowId = null;
+            let lastPose = { x: null, y: null, z: null, pose_is_stale: true, ts: null };
+
+            const sequence = []; // array of {x,y,z,v, ts, note?}
+            const POLL_MS = 1000;
+
+            function setStatus(msg){ statusEl.textContent = msg || ""; }
+
+            function fmt(n){
+                return (n === null || n === undefined) ? "—" : Number(n).toFixed(2);
+            }
+
+            function updateCurrentPoseUI(pose, ts){
+                curX.textContent = fmt(pose?.x);
+                curY.textContent = fmt(pose?.y);
+                curZ.textContent = fmt(pose?.z);
+
+                const stale = !!pose?.pose_is_stale;
+                curStale.textContent = stale ? " (STALE)" : " (OK)";
+                curStale.style.opacity = stale ? "1" : "0.7";
+                curTs.textContent = ts ? `@ ${ts}` : "";
+            }
+
+            function createRow(index){
+                const tr = document.createElement("tr");
+                const rowId = crypto.randomUUID();
+                tr.dataset.rowId = rowId;
+
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><input class="tx" type="number" step="1" placeholder="mm"></td>
+                    <td><input class="ty" type="number" step="1" placeholder="mm"></td>
+                    <td><input class="tz" type="number" step="1" placeholder="mm"></td>
+                    <td><input class="tv" type="number" step="1" min="0" placeholder="mm/s" value="50"></td>
+                    <td>
+                    <button class="teach-btn save-pos">Save Position</button>
+                    <button class="teach-btn del-pos">Delete</button>
+                    </td>
+                `;
+
+                const savePosBtn = tr.querySelector(".save-pos");
+                const delBtn = tr.querySelector(".del-pos");
+
+                savePosBtn.addEventListener("click", () => {
+                    if (!teaching) return;
+
+                    const x = Number(tr.querySelector(".tx").value);
+                    const y = Number(tr.querySelector(".ty").value);
+                    const z = Number(tr.querySelector(".tz").value);
+                    const v = Number(tr.querySelector(".tv").value);
+
+                    if (![x,y,z,v].every(Number.isFinite)) {
+                        setStatus("Enter valid numbers before saving.");
+                        return;
+                    }
+                    if (v <= 0) {
+                        setStatus("Velocity must be > 0.");
+                        return;
+                    }
+
+                    // lock row
+                    lockRow(tr);
+
+                    // persist into sequence at this index
+                    const allRows = Array.from(rowsTbody.querySelectorAll("tr"));
+                    const idx = allRows.indexOf(tr);
+
+                    sequence[idx] = { x, y, z, v };
+                    // sequence[idx] = { x, y, z, v, saved_at: new Date().toISOString() };
+                    setStatus(`Saved position #${idx+1}: (${x}, ${y}, ${z}) @ ${v} mm/s`);
+
+                    // auto-create next row
+                    addNewActiveRow();
+                });
+
+                delBtn.addEventListener("click", () => {
+                    // delete row + shift sequence
+                    const rid = tr.dataset.rowId;
+                    const allRows = Array.from(rowsTbody.querySelectorAll("tr"));
+                    const idx = allRows.findIndex(r => r.dataset.rowId === rid);
+                    if (idx >= 0) {
+                    allRows[idx].remove();
+                    sequence.splice(idx, 1);
+                    renumberRows();
+
+                    // if deleted row was active, pick last row as active (or none)
+                    if (activeRowId === rid) {
+                        activeRowId = null;
+                        const remaining = rowsTbody.querySelectorAll("tr");
+                        if (remaining.length) setActiveRow(remaining[remaining.length - 1]);
+                    }
+                    }
+                });
+
+                return tr;
+            }
+
+            function lockRow(tr){
+                tr.classList.add("teach-row-locked");
+                tr.classList.remove("teach-row-active");
+                tr.querySelectorAll("input").forEach(inp => inp.disabled = true);
+                tr.querySelector(".save-pos").disabled = true;
+            }
+
+            function setActiveRow(tr){
+                rowsTbody.querySelectorAll("tr").forEach(r => r.classList.remove("teach-row-active"));
+                tr.classList.add("teach-row-active");
+                activeRowId = tr.dataset.rowId;
+            }
+
+            function addNewActiveRow(){
+                const index = rowsTbody.querySelectorAll("tr").length;
+                const tr = createRow(index);
+                rowsTbody.appendChild(tr);
+                setActiveRow(tr);
+
+                // Immediately populate from latest pose if we have it
+                // if (lastPose.x !== null) autopopulateActiveRow();
+                autopopulateActiveRow();
+                saveBtn.disabled = false;
+            }
+
+            function renumberRows(){
+            Array.from(rowsTbody.querySelectorAll("tr")).forEach((tr, i) => {
+                tr.children[0].textContent = String(i + 1);
+            });
+            }
+
+            function autopopulateActiveRow() {
+            if (!teaching || !activeRowId) return;
+
+            // Optional safety: don’t fill if pose is stale
+            // if (lastPose.pose_is_stale) return;
+
+            if (![lastPose.x, lastPose.y, lastPose.z].every(Number.isFinite)) return;
+
+            const tr = rowsTbody.querySelector(`tr[data-row-id="${activeRowId}"]`);
+            if (!tr) return;
+
+            const tx = tr.querySelector(".tx");
+            const ty = tr.querySelector(".ty");
+            const tz = tr.querySelector(".tz");
+
+            // Only fill if empty (so user can override manually)
+            if (tx.value === "") tx.value = Math.round(lastPose.x);
+            if (ty.value === "") ty.value = Math.round(lastPose.y);
+            if (tz.value === "") tz.value = Math.round(lastPose.z);
+            }
+
+
+            function startTeaching(){
+            teaching = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            saveBtn.disabled = false;
+            setStatus("Teaching started. Move robot, row will auto-fill, then click Save Position.");
+
+            // start with fresh table
+            rowsTbody.innerHTML = "";
+            sequence.length = 0;
+            activeRowId = null;
+
+            addNewActiveRow();
+            }
+
+            function stopTeaching(){
+            teaching = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            setStatus("Teaching stopped.");
+            // keep rows as-is
+            }
+
+            async function saveSequenceToServer() {
+                const cleaned = sequence.filter(p => p && Number.isFinite(p.x));
+
+                if (cleaned.length === 0) {
+                    setStatus("No points to save.");
+                    return;
+                }
+
+                const payload = {
+                    device,
+                    created_at: new Date().toISOString(),
+                    points: cleaned
+                };
+
+                try {
+                    const res = await fetch(`/spatial/motion_routine/${device}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Server error: ${text}`);
+                    }
+
+                    const json = await res.json();
+                    // const res_msg=JSON.stringify(json)
+                    setStatus(`Sequence saved successfully (${json.points_saved}).`);
+
+                } catch (err) {
+                    setStatus(`Save failed: ${err.message}`);
+                }
+            }
+
+
+            startBtn.addEventListener("click", startTeaching);
+            stopBtn.addEventListener("click", stopTeaching);
+            saveBtn.addEventListener("click", saveSequenceToServer);
+
+            async function pollPose() {
+            try {
+                const res = await fetch(`/spatial/processed_data?device=${encodeURIComponent(device)}`, {
+                cache: "no-store"
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const json = await res.json();
+
+                const pose = json?.pose_data;
+                const ts = json?.timestamp;
+
+                const x = pose?.x;
+                const y = pose?.y;
+                const z = pose?.z;
+                const stale = !!pose?.pose_is_stale;
+
+                // ✅ Update UI
+                curX.textContent = (x === null || x === undefined) ? "—" : Number(x).toFixed(2);
+                curY.textContent = (y === null || y === undefined) ? "—" : Number(y).toFixed(2);
+                curZ.textContent = (z === null || z === undefined) ? "—" : Number(z).toFixed(2);
+
+                curStale.textContent = stale ? " (STALE)" : " (OK)";
+                curStale.style.opacity = stale ? "1" : "0.7";
+                curTs.textContent = ts ? ` @ ${ts}` : "";
+
+                // ✅ This is the important part for teaching
+                lastPose = {
+                            x: (x === null || x === undefined) ? null : Number(x),
+                            y: (y === null || y === undefined) ? null : Number(y),
+                            z: (z === null || z === undefined) ? null : Number(z),
+                            pose_is_stale: stale,
+                            ts
+                        };
+                autopopulateActiveRow();   // fills current active teach row
+
+            } catch (err) {
+                curStale.textContent = ` (fetch error)`;
+                curTs.textContent = "";
+            }
+            }
+
+            pollPose();
+            setInterval(pollPose, POLL_MS);
+
+
+            // Initialize UI
+            updateCurrentPoseUI({x:null,y:null,z:null,pose_is_stale:true}, null);
+            saveBtn.disabled = true;
+            stopBtn.disabled = true;
+        });
+
+
+
 
     }
 });

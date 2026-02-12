@@ -13,6 +13,8 @@ class LinearGantryPlanner:
         self._pose_is_stale =True
         self.limits = limits
 
+        self._motion_routine_idx = 0
+
 
         self.home_dirs = home_dirs #[x,y,z]
         self.mm_per_revs = mm_per_revs #[x,y,z]
@@ -130,3 +132,6 @@ class LinearGantryPlanner:
     def pose_is_stale(self):
 
         return self._pose_is_stale
+    
+    def load_motion_routine(self, position_list):
+        pass

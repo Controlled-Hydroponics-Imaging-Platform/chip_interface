@@ -318,7 +318,34 @@
     color: #a00;
   }
 
+  /* ================= teach pendant panel ================= */
 
+  .teach-panel{ padding:12px; border:2px solid #ddd; border-radius:12px; max-width: 920px; }
+  .teach-header{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .teach-title{ font-weight:600; margin-right:10px; }
+  .teach-meta{ margin-top:10px; font-family: monospace; font-size:12px; color:#333; }
+  .teach-cur-stale{ margin-left:6px; color:#a00; }
+  .teach-cur-ts{ margin-left:8px; opacity:0.8; }
+
+  .teach-table-wrap{ margin-top:12px; overflow:auto; }
+  .teach-table{ width:100%; border-collapse:collapse; font-size:14px; }
+  .teach-table th, .teach-table td{ border-bottom:1px solid #eee; padding:8px; text-align:left; }
+  .teach-table th{ font-size:12px; color:#666; }
+
+  .teach-table input{
+    width:110px; padding:7px; border:2px solid #ccc; border-radius:8px;
+  }
+
+  .teach-btn{
+    padding:8px 10px; border-radius:10px; border:2px solid #ccc;
+    background:#f5f5f5; cursor:pointer; margin-right:6px;
+  }
+  .teach-btn:active{ background:#ddd; }
+  .teach-btn[disabled]{ opacity:0.5; cursor:not-allowed; }
+
+  .teach-status{ margin-top:10px; font-family: monospace; font-size:12px; color:#333; }
+  .teach-row-active{ outline: 2px solid #cde; outline-offset: -2px; }
+  .teach-row-locked{ opacity: 0.8; }
 
 </style>
 
@@ -385,4 +412,42 @@
 
   <button class="moveto-send">Send</button>
   <div class="moveto-status"></div>
+</div>
+
+<div class="teach-panel" control-device="motor_driver">
+  <div class="teach-header">
+    <div class="teach-title">Teach Sequence</div>
+    <button class="teach-start">Start Teaching</button>
+    <button class="teach-stop" disabled>Stop</button>
+    <button class="teach-savejson" disabled>Save Sequence (JSON)</button>
+  </div>
+
+  <div class="teach-meta">
+    Current Pose:
+    X=<span class="teach-cur-x">—</span>,
+    Y=<span class="teach-cur-y">—</span>,
+    Z=<span class="teach-cur-z">—</span>
+    <span class="teach-cur-stale"></span>
+    <span class="teach-cur-ts"></span>
+  </div>
+
+  <div class="teach-table-wrap">
+    <table class="teach-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>X (mm)</th>
+          <th>Y (mm)</th>
+          <th>Z (mm)</th>
+          <th>V (mm/s)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody class="teach-rows">
+        <!-- rows get added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="teach-status"></div>
 </div>
