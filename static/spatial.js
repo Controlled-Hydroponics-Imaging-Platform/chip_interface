@@ -493,7 +493,10 @@ window.pluginRegistry.push({
 
             function createRow(index){
                 const tr = document.createElement("tr");
-                const rowId = crypto.randomUUID();
+                const rowId = (window.crypto && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : "row_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+
                 tr.dataset.rowId = rowId;
 
                 tr.innerHTML = `
