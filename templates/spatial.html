@@ -263,11 +263,12 @@
 
     /* ================= move to control panel ================= */
 
-    .moveto-control-panel{
-    display:flex;
-    gap:10px;
-    align-items:flex-end;
-    padding:10px;
+  .moveto-control-panel{
+  display:flex;
+  flex-wrap: wrap;
+  gap:10px;
+  align-items:flex-end;
+  padding:10px;
   }
 
   .moveto-row{
@@ -292,7 +293,7 @@
     padding:10px 14px;
     border-radius:10px;
     border:2px solid #ccc;
-    background:#f5f5f5;
+    background:#1100ff;
     cursor:pointer;
   }
 
@@ -304,6 +305,21 @@
     font-size: 12px;
     color:#333;
   }
+
+  .moveto-current{
+    margin-top: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+    flex-basis: 100%;
+  }
+  .moveto-cur-stale{
+    margin-left: 6px;
+    color: #a00;
+  }
+
+
+
 </style>
 
 
@@ -338,6 +354,15 @@
 
 
 <div class="moveto-control-panel" control-device="motor_driver">
+  <div class="moveto-current">
+    Pose: 
+    X=<span class="moveto-cur-x">—</span> mm,
+    Y=<span class="moveto-cur-y">—</span> mm,
+    Z=<span class="moveto-cur-z">—</span> mm
+    <span class="moveto-cur-stale"></span>
+    <span class="moveto-cur-ts"></span>
+  </div>
+
   <div class="moveto-row">
     <label>X</label>
     <input class="moveto-x" type="number" step="1" placeholder="mm">

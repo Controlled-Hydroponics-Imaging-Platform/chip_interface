@@ -344,64 +344,113 @@ window.pluginRegistry.push({
 
         ///////////////// Move_to Functionality /////////////////////
         document.querySelectorAll(".moveto-control-panel").forEach(panel => {
-        const device = panel.getAttribute("control-device");
+            const device = panel.getAttribute("control-device");
+            if (!device) return;
 
-        const xEl = panel.querySelector(".moveto-x");
-        const yEl = panel.querySelector(".moveto-y");
-        const zEl = panel.querySelector(".moveto-z");
-        const vEl = panel.querySelector(".moveto-v");
-        const btn = panel.querySelector(".moveto-send");
-        const status = panel.querySelector(".moveto-status");
+            const xEl = panel.querySelector(".moveto-x");
+            const yEl = panel.querySelector(".moveto-y");
+            const zEl = panel.querySelector(".moveto-z");
+            const vEl = panel.querySelector(".moveto-v");
+            const btn = panel.querySelector(".moveto-send");
+            const status = panel.querySelector(".moveto-status");
 
-        function setStatus(msg){
-            if (status) status.textContent = msg;
-        }
+            const curX = panel.querySelector(".moveto-cur-x");
+            const curY = panel.querySelector(".moveto-cur-y");
+            const curZ = panel.querySelector(".moveto-cur-z");
+            const curStale = panel.querySelector(".moveto-cur-stale");
+            const curTs = panel.querySelector(".moveto-cur-ts");
+            
+            const POLL_MS = 1000; // 1 Hz
 
-        function parseNum(el){
-            const v = el.value.trim();
-            if (v === "") return null;
-            const n = Number(v);
-            return Number.isFinite(n) ? n : null;
-        }
+            async function pollPose() {
+                try {
+                const res = await fetch(`/spatial/processed_data?device=${encodeURIComponent(device)}`, {
+                    cache: "no-store"
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        btn.addEventListener("click", () => {
-            if (!device){
-            setStatus("missing device");
-            return;
+                const json = await res.json();
+
+                const pose = json?.pose_data;
+                const ts = json?.timestamp;
+
+                const x = pose?.x;
+                const y = pose?.y;
+                const z = pose?.z;
+                const stale = !!pose?.pose_is_stale;
+
+                curX.textContent = (x === null || x === undefined) ? "—" : Number(x).toFixed(2);
+                curY.textContent = (y === null || y === undefined) ? "—" : Number(y).toFixed(2);
+                curZ.textContent = (z === null || z === undefined) ? "—" : Number(z).toFixed(2);
+
+                curStale.textContent = stale ? " (STALE)" : " (OK)";
+                curStale.style.opacity = stale ? "1" : "0.7";
+
+                curTs.textContent = ts ? ` @ ${ts}` : "";
+                } catch (err) {
+                // optional: show fetch error in the stale field
+                curStale.textContent = ` (fetch error)`;
+                curTs.textContent = "";
+                }
             }
 
-            const x = parseNum(xEl);
-            const y = parseNum(yEl);
-            const z = parseNum(zEl);
-            const v = parseNum(vEl);   // velocity mm/s
 
-            if (x === null || y === null || z === null || v === null){
-            setStatus("enter valid x y z v");
-            return;
-            }
-            if (v <= 0){
-            setStatus("velocity must be > 0");
-            return;
+            pollPose();
+            setInterval(pollPose, POLL_MS);
+
+
+            function setStatus(msg){
+                if (status) status.textContent = msg;
             }
 
-            const payload = {
-            device,
-            x, y, z,
-            v,              // mm/s
-            ts: Date.now()
-            };
+            function parseNum(el){
+                const v = el.value.trim();
+                if (v === "") return null;
+                const n = Number(v);
+                return Number.isFinite(n) ? n : null;
+            }
 
-            console.log("⬆️ emitting moveto_xyzv:", payload);
-            socket.emit("moveto_xyzv", payload);
-            setStatus(`sent (${x}, ${y}, ${z}) @ ${v} mm/s`);
-        });
+            btn.addEventListener("click", () => {
+                if (!device){
+                setStatus("missing device");
+                return;
+                }
 
-        // Press Enter to send
-        [xEl, yEl, zEl, vEl].forEach(el => {
-            el.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") btn.click();
+                const x = parseNum(xEl);
+                const y = parseNum(yEl);
+                const z = parseNum(zEl);
+                const v = parseNum(vEl);   // velocity mm/s
+
+                if (x === null || y === null || z === null || v === null){
+                setStatus("enter valid x y z v");
+                return;
+                }
+                if (v <= 0){
+                setStatus("velocity must be > 0");
+                return;
+                }
+
+                const payload = {
+                device,
+                x, y, z,
+                v,              // mm/s
+                ts: Date.now()
+                };
+
+                console.log("⬆️ emitting moveto_xyzv:", payload);
+                socket.emit("moveto_xyzv", payload);
+                setStatus(`sent (${x}, ${y}, ${z}) @ ${v} mm/s`);
             });
-        });
+
+            // Press Enter to send
+            [xEl, yEl, zEl, vEl].forEach(el => {
+                el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") btn.click();
+                });
+            });
+        
+        
+        
         });
 
     }

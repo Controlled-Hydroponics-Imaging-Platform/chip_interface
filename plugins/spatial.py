@@ -179,7 +179,7 @@ def get_serial_data():
     device = request.args.get("device")
 
     output_data = serial_device_list[device].last_output
-
+    output_data["pose_data"] = linear_gantry_device_list[device].get_current_pose()
 
     return jsonify(output_data)  # Return JSON response
 
