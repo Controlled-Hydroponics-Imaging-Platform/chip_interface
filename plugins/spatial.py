@@ -203,9 +203,8 @@ def register_socket_handlers(socketio):
                 time.sleep(0.01)
                 serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
                 time.sleep(0.01)
-        
         else:
-            print(f"{msg["command"]} not resigstered to socket callback")
+            print("command not resigstered to socket callback")
 
     return "joystick_xyz, moveto_xyzv"
 
