@@ -351,7 +351,11 @@ window.pluginRegistry.push({
             const yEl = panel.querySelector(".moveto-y");
             const zEl = panel.querySelector(".moveto-z");
             const vEl = panel.querySelector(".moveto-v");
-            const btn = panel.querySelector(".moveto-send");
+            const send_btn = panel.querySelector(".moveto-send");
+            const home_btn = panel.querySelector(".moveto-home");
+            const calibrate_btn = panel.querySelector(".moveto-calibrate");
+            const standby_btn = panel.querySelector(".moveto-standby");
+
             const status = panel.querySelector(".moveto-status");
 
             const curX = panel.querySelector(".moveto-cur-x");
@@ -361,6 +365,13 @@ window.pluginRegistry.push({
             const curTs = panel.querySelector(".moveto-cur-ts");
             
             const POLL_MS = 1000; // 1 Hz
+
+            let standbyOn = false;
+
+            function updateStandbyUI(){
+                standby_btn.textContent = standbyOn ? "Standby: ON" : "Standby: OFF";
+                standby_btn.classList.toggle("is-on", standbyOn);
+            }
 
             async function pollPose() {
                 try {
@@ -379,9 +390,16 @@ window.pluginRegistry.push({
                 const z = pose?.z;
                 const stale = !!pose?.pose_is_stale;
 
+                standbyOn = !!pose?.standby_mode;
+                updateStandbyUI();
+
                 curX.textContent = (x === null || x === undefined) ? "—" : Number(x).toFixed(2);
                 curY.textContent = (y === null || y === undefined) ? "—" : Number(y).toFixed(2);
                 curZ.textContent = (z === null || z === undefined) ? "—" : Number(z).toFixed(2);
+
+                // curX.textContent = Number.isFinite(Number(x)) ? Number(x).toFixed(2) : "—";
+                // curY.textContent = Number.isFinite(Number(y)) ? Number(y).toFixed(2) : "—";
+                // curZ.textContent = Number.isFinite(Number(z)) ? Number(z).toFixed(2) : "—";
 
                 curStale.textContent = stale ? " (STALE)" : " (OK)";
                 curStale.style.opacity = stale ? "1" : "0.7";
@@ -397,6 +415,8 @@ window.pluginRegistry.push({
 
             pollPose();
             setInterval(pollPose, POLL_MS);
+            updateStandbyUI();
+
 
 
             function setStatus(msg){
@@ -410,7 +430,7 @@ window.pluginRegistry.push({
                 return Number.isFinite(n) ? n : null;
             }
 
-            btn.addEventListener("click", () => {
+            send_btn.addEventListener("click", () => {
                 if (!device){
                 setStatus("missing device");
                 return;
@@ -433,19 +453,75 @@ window.pluginRegistry.push({
                 const payload = {
                 device,
                 x, y, z,
-                v,              // mm/s
+                v,
+                command:"move_to",
                 ts: Date.now()
                 };
 
-                console.log("⬆️ emitting moveto_xyzv:", payload);
-                socket.emit("moveto_xyzv", payload);
+                console.log("⬆️ emitting platform_command_parser:", payload);
+                socket.emit("platform_command_parser", payload);
                 setStatus(`sent (${x}, ${y}, ${z}) @ ${v} mm/s`);
+            });
+
+            home_btn.addEventListener("click", () => {
+                if (!device){
+                setStatus("missing device");
+                return;
+                }
+
+                const payload = {
+                device,
+                command:"home",
+                ts: Date.now()
+                };
+
+                console.log("⬆️ emitting platform_command_parser:", payload);
+                socket.emit("platform_command_parser", payload);
+                setStatus(`sent (default home position`);
+            });
+
+            calibrate_btn.addEventListener("click", () => {
+                if (!device){
+                setStatus("missing device");
+                return;
+                }
+
+                const payload = {
+                device,
+                command:"home_calibrate",
+                ts: Date.now()
+                };
+
+                console.log("⬆️ emitting platform_command_parser:", payload);
+                socket.emit("platform_command_parser", payload);
+                setStatus(`sent (calibration`);
+            });
+
+            standby_btn.addEventListener("click", () => {
+                if (!device){
+                setStatus("missing device");
+                return;
+                }
+
+                standbyOn = !standbyOn;
+                updateStandbyUI();
+
+                const payload = {
+                device,
+                command:"standby",
+                state:standbyOn,
+                ts: Date.now()
+                };
+
+                console.log("⬆️ emitting platform_command_parser:", payload);
+                socket.emit("platform_command_parser", payload);
+                setStatus(`sent (standby`);
             });
 
             // Press Enter to send
             [xEl, yEl, zEl, vEl].forEach(el => {
                 el.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") btn.click();
+                if (e.key === "Enter") send_btn.click();
                 });
             });
         
@@ -627,29 +703,6 @@ window.pluginRegistry.push({
                 tr.querySelector(".tz").value = lastPose.z.toFixed(2);
             }
 
-
-            // function autopopulateActiveRow() {
-            // if (!teaching || !activeRowId) return;
-
-            // // Optional safety: don’t fill if pose is stale
-            // // if (lastPose.pose_is_stale) return;
-
-            // if (![lastPose.x, lastPose.y, lastPose.z].every(Number.isFinite)) return;
-
-            // const tr = rowsTbody.querySelector(`tr[data-row-id="${activeRowId}"]`);
-            // if (!tr) return;
-
-            // const tx = tr.querySelector(".tx");
-            // const ty = tr.querySelector(".ty");
-            // const tz = tr.querySelector(".tz");
-
-            // // Only fill if empty (so user can override manually)
-            // if (tx.value === "") tx.value = Math.round(lastPose.x);
-            // if (ty.value === "") ty.value = Math.round(lastPose.y);
-            // if (tz.value === "") tz.value = Math.round(lastPose.z);
-            // }
-
-
             function startTeaching(){
             teaching = true;
             startBtn.disabled = true;
@@ -732,16 +785,18 @@ window.pluginRegistry.push({
                 const z = pose?.z;
                 const stale = !!pose?.pose_is_stale;
 
-                // ✅ Update UI
                 curX.textContent = (x === null || x === undefined) ? "—" : Number(x).toFixed(2);
                 curY.textContent = (y === null || y === undefined) ? "—" : Number(y).toFixed(2);
                 curZ.textContent = (z === null || z === undefined) ? "—" : Number(z).toFixed(2);
+
+                // curX.textContent = Number.isFinite(Number(x)) ? Number(x).toFixed(2) : "—";
+                // curY.textContent = Number.isFinite(Number(y)) ? Number(y).toFixed(2) : "—";
+                // curZ.textContent = Number.isFinite(Number(z)) ? Number(z).toFixed(2) : "—";
 
                 curStale.textContent = stale ? " (STALE)" : " (OK)";
                 curStale.style.opacity = stale ? "1" : "0.7";
                 curTs.textContent = ts ? ` @ ${ts}` : "";
 
-                // ✅ This is the important part for teaching
                 lastPose = {
                             x: (x === null || x === undefined) ? null : Number(x),
                             y: (y === null || y === undefined) ? null : Number(y),

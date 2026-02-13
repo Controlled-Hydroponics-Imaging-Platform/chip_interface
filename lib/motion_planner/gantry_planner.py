@@ -1,4 +1,23 @@
 import numpy as np
+import functools
+
+def require_active_pose(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if np.isnan(self.curr_pose).any():
+            print("system is in standby mode")
+            return None
+        return func(self, *args, **kwargs)
+    return wrapper
+
+
+def _safe_float(v):
+    if v is None:
+        return None
+    if isinstance(v, (float, np.floating)) and np.isnan(v):
+        return None
+    return float(v)
+
 
 class LinearGantryPlanner:
     def __init__(self,
@@ -11,6 +30,7 @@ class LinearGantryPlanner:
         """ this class is used to plan motion for a gantry robot, done in mm"""
         
         self._pose_is_stale =True
+        self._in_standby_mode = False
         self.limits = limits
 
         self._motion_routine_idx = 0
@@ -40,16 +60,17 @@ class LinearGantryPlanner:
                  max(0.0, min(float(target_pose[1]),float(self.limits['y']))),
                  max(0.0, min(float(target_pose[2]),float(self.limits['z'])))
                 ]
-
+    
+    @require_active_pose
     def move_to(self, target_pose, vel, bypass_limits = False):
         """
         target_pose: [x,y,z] in mm
         vel: linear velocity in the task space in mm/s
         """
 
-        if np.isnan(self.curr_pose).any():
-            print("system is in stanbymode")
-            return
+        # if np.isnan(self.curr_pose).any():
+        #     print("system is in stanbymode")
+        #     return
 
         if not bypass_limits:
             target_pose = self._evaluate_limits(target_pose)
@@ -87,6 +108,7 @@ class LinearGantryPlanner:
 
         return out
 
+    @require_active_pose
     def move(self, rel_pose, vel, bypass_limits = False):
         
         rel_pose = np.asarray(rel_pose, dtype=float).reshape(3,)
@@ -97,9 +119,10 @@ class LinearGantryPlanner:
         
         return out
 
-    def stand_by(self, state=True):
+    def standby(self, state=True):
 
         self._pose_is_stale=True
+        self._in_standby_mode = state
         
         out = {
             'action': 'set_standby',
@@ -113,6 +136,7 @@ class LinearGantryPlanner:
 
         return out
 
+    @require_active_pose
     def home(self, calibrate = False):
         
         if not calibrate:
@@ -126,7 +150,7 @@ class LinearGantryPlanner:
     
     def get_current_pose(self):
 
-        out = {'x':float(self.curr_pose[0]),'y': float(self.curr_pose[1]),'z':float(self.curr_pose[2]), 'pose_is_stale': self._pose_is_stale}
+        out = {'x':_safe_float(self.curr_pose[0]),'y': _safe_float(self.curr_pose[1]),'z':_safe_float(self.curr_pose[2]), 'pose_is_stale': self._pose_is_stale, 'standby_mode': self._in_standby_mode}
         return out
     
     def pose_is_stale(self):

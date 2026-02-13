@@ -299,6 +299,44 @@
 
   .moveto-send:active{ background:#ddd; }
 
+
+  .moveto-home{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-home:active{ background:#ddd; }
+
+
+  .moveto-calibrate{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-calibrate:active{ background:#ddd; }
+
+
+  .moveto-standby{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-standby:active{ background:#ddd; }
+
+  .moveto-standby.is-on{
+  background: #ffd6d6;
+  border-color: #c55;
+  }
+
   .moveto-status{
     margin-left:10px;
     font-family: monospace;
@@ -338,7 +376,7 @@
 
   .teach-btn{
     padding:8px 10px; border-radius:10px; border:2px solid #ccc;
-    background:#f5f5f5; cursor:pointer; margin-right:6px;
+    background:#1100ff; cursor:pointer; margin-right:6px;
   }
   .teach-btn:active{ background:#ddd; }
   .teach-btn[disabled]{ opacity:0.5; cursor:not-allowed; }
@@ -411,6 +449,10 @@
   </div>
 
   <button class="moveto-send">Send</button>
+  <button class="moveto-home">Home</button>
+  <button class="moveto-calibrate">Calibrate</button>
+  <button class="moveto-standby">Standby</button>
+
   <div class="moveto-status"></div>
 </div>
 

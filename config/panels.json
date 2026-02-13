@@ -54,7 +54,7 @@
             "label": "width (px)",
             "type": "number",
             "value_type": "number",
-            "set_to": 800
+            "set_to": 950
         },
         "height": {
             "label": "height (px)",

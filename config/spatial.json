@@ -4,7 +4,7 @@
         "type": "serial_port",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyACM0",
+        "set_to": "/dev/ttyACM1",
         "baud_rate": 115200,
         "timeout": 1,
         "poll_rate": 0.1
