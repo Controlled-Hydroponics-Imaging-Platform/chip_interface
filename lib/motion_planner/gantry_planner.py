@@ -156,5 +156,5 @@ class LinearGantryPlanner:
     def load_motion_routine(self, position_list):
         pass
 
-    def run_motion_routine(self):
+    def next(self):
         pass

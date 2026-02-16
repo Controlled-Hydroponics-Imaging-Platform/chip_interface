@@ -19,6 +19,7 @@ scripts =["spatial.js"]
 serial_reader_alias = None
 serial_device_list = {}
 linear_gantry_device_list = {}
+data_handler_list = {}
 app_root_path = None
 
 def process_driver_data(raw_serial_output):
@@ -112,25 +113,6 @@ def register_serial_sockets(SerialReader, socketio, app):
 
 
 def register_socket_handlers(socketio):
-    @socketio.on("joystick_xyz")
-    def joystick_xyz(msg):
-        # print(msg)
-
-        device = msg["device"]
-        x = float(msg["x"]) *5 #convert to arbitrary scaling
-        y = float(msg["y"]) *5 #convert to arbitrary scaling
-        z = float(msg["z"]) *5 #convert to arbitrary scaling
-
-        out =linear_gantry_device_list[device].move([x,y,z], 80)
-
-        # out = motion_platform_planner.move([x,y,z], 5)
-
-        if out:
-            serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-            time.sleep(0.01)
-            serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
-            time.sleep(0.01)
-    
     @socketio.on("moveto_xyzv")
     def move_to_xyz(msg):
         print(msg)
@@ -206,7 +188,7 @@ def register_socket_handlers(socketio):
         else:
             print("command not resigstered to socket callback")
 
-    return "joystick_xyz, moveto_xyzv"
+    return "moveto_xyzv, platform_command_parser"
 
 
 def reload_routine(socketio, app):
