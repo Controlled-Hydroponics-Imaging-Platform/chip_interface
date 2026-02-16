@@ -1,7 +1,7 @@
 import numpy as np
 import functools
 
-def require_active_pose(func):
+def standby_gaurd(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if np.isnan(self.curr_pose).any():
@@ -61,16 +61,12 @@ class LinearGantryPlanner:
                  max(0.0, min(float(target_pose[2]),float(self.limits['z'])))
                 ]
     
-    @require_active_pose
+    @standby_gaurd
     def move_to(self, target_pose, vel, bypass_limits = False):
         """
         target_pose: [x,y,z] in mm
         vel: linear velocity in the task space in mm/s
         """
-
-        # if np.isnan(self.curr_pose).any():
-        #     print("system is in stanbymode")
-        #     return
 
         if not bypass_limits:
             target_pose = self._evaluate_limits(target_pose)
@@ -108,7 +104,7 @@ class LinearGantryPlanner:
 
         return out
 
-    @require_active_pose
+    @standby_gaurd
     def move(self, rel_pose, vel, bypass_limits = False):
         
         rel_pose = np.asarray(rel_pose, dtype=float).reshape(3,)
@@ -136,7 +132,7 @@ class LinearGantryPlanner:
 
         return out
 
-    @require_active_pose
+    @standby_gaurd
     def home(self, calibrate = False):
         
         if not calibrate:
@@ -158,4 +154,7 @@ class LinearGantryPlanner:
         return self._pose_is_stale
     
     def load_motion_routine(self, position_list):
+        pass
+
+    def run_motion_routine(self):
         pass

@@ -172,95 +172,6 @@
     }
     }
 
-
-    /* ================= Control Panel ================= */
-
-    .joystick-control-panel{
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    padding: 10px;
-    }
-
-    /* Stack nicely on small screens */
-    @media (max-width: 600px) {
-    .joystick-control-panel{
-        flex-direction: column;
-        align-items: center;
-    }
-    }
-
-    /* Disabled visual state */
-    .joystick-control-panel.disabled{
-    opacity: 0.5;
-    }
-
-    .joystick-control-panel.disabled .joy,
-    .joystick-control-panel.disabled .z-btn{
-    pointer-events: none;
-    }
-
-    /* ================= Joystick ================= */
-
-    .joy{
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: #eee;
-    position: relative;
-    touch-action: none;
-    border: 2px solid #ccc;
-    user-select: none;
-    -webkit-user-select: none;
-    }
-
-    .knob{
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: #bbb;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    user-select: none;
-    -webkit-user-select: none;
-    }
-
-    /* ================= Z Axis Buttons ================= */
-
-    .z-controls{
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    }
-
-    .z-btn{
-    width: 60px;
-    height: 60px;
-    font-size: 28px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    background: #f5f5f5;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    cursor: pointer;
-    }
-
-    .z-btn:active{
-    background: #ddd;
-    }
-
-    /* ================= Output / Debug ================= */
-
-    .out{
-    min-width: 220px;
-    font-family: monospace;
-    font-size: 14px;
-    color: #333;
-    }
-
     /* ================= move to control panel ================= */
 
   .moveto-control-panel{
@@ -401,22 +312,6 @@
     <div class="motion-status" data-device="motor_driver"></div>
     <div class="motion-message" data-device="motor_driver">Waiting for data...</div>
 </div>
-
-<!-- <div class="joystick-control-panel" control-device="motor_driver">
-  <button class="joyToggle">Joystick Mode: OFF</button>
-
-  <div class="joy">
-    <div class="knob"></div>
-  </div>
-
-  <div class="z-controls">
-    <button class="z-up">▲</button>
-    <button class="z-down">▼</button>
-  </div>
-
-  <div class="out"></div>
-</div> -->
-
 
 <div class="moveto-control-panel" control-device="motor_driver">
   <div class="moveto-current">
