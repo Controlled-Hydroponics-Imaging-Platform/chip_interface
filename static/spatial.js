@@ -568,18 +568,21 @@ window.pluginRegistry.push({
             }
 
             function startTeaching(){
-            teaching = true;
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            saveBtn.disabled = false;
-            setStatus("Teaching started. Move robot, row will auto-fill, then click Save Position.");
+                teaching = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                saveBtn.disabled = false;
 
-            // start with fresh table
-            rowsTbody.innerHTML = "";
-            sequence.length = 0;
-            activeRowId = null;
+                // if(){}
 
-            addNewActiveRow();
+                setStatus("Teaching started. Move robot, row will auto-fill, then click Save Position.");
+
+                // start with fresh table
+                rowsTbody.innerHTML = "";
+                sequence.length = 0;
+                activeRowId = null;
+
+                addNewActiveRow();
             }
 
             function stopTeaching(){
