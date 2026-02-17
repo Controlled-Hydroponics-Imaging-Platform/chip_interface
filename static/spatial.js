@@ -690,6 +690,100 @@ window.pluginRegistry.push({
         });
 
 
+        ///////////////// Schedule Parser Functionality /////////////////////
+        document.querySelectorAll(".scheduler").forEach(panel => {
+            const device = panel.getAttribute("control-device");
+            const input = panel.querySelector(".schedule-input");
+            const btn = panel.querySelector(".schedule-send");
+            const status = panel.querySelector(".scheduler-status");
+            const curr = panel.querySelector(".scheduler-curr");
+
+            function safeStringify(obj) {
+                try { return JSON.stringify(obj, null, 2); }
+                catch { return String(obj); }
+            }
+
+            async function fetchCurrentConfig() {
+                const resp = await fetch(`/spatial/routine_schedule/${encodeURIComponent(device)}`, {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+                });
+
+                if (!resp.ok) {
+                const txt = await resp.text().catch(() => "");
+                throw new Error(`GET failed: HTTP ${resp.status} ${txt}`);
+                }
+                return resp.json();
+            }
+
+            function parseSchedule(raw) {
+                const s = (raw || "").trim();
+                if (!s) return [];
+
+                if (s.startsWith("[") && s.endsWith("]")) {
+                const arr = JSON.parse(s);
+                if (!Array.isArray(arr)) throw new Error("Not an array");
+                return arr.map(x => String(x).trim()).filter(Boolean);
+                }
+                return s.split(",").map(x => x.trim()).filter(Boolean);
+            }
+
+            async function postSchedule(scheduleArr) {
+                const payload = { device, schedule: scheduleArr }; // unexpanded
+                const resp = await fetch(`/spatial/routine_schedule/${encodeURIComponent(device)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                });
+
+                if (!resp.ok) {
+                const txt = await resp.text().catch(() => "");
+                throw new Error(`POST failed: HTTP ${resp.status} ${txt}`);
+                }
+                return resp.json().catch(() => ({}));
+            }
+
+            async function refreshUI() {
+                try {
+                status.textContent = "Loading current schedule…";
+                const data = await fetchCurrentConfig();
+
+                // show full current config
+                curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
+
+                // if backend returns an unexpanded schedule list, prefill the input
+                // adjust these keys to match your backend response shape:
+                const unexpanded = data.schedule ?? data.trigger_schedule ?? data.config?.schedule;
+
+                if (Array.isArray(unexpanded)) {
+                    input.value = JSON.stringify(unexpanded);
+                }
+
+                status.textContent = "Schedule Loaded.";
+                } catch (err) {
+                status.textContent = `Error loading: ${err.message}`;
+                }
+            }
+
+            btn.addEventListener("click", async () => {
+                try {
+                const scheduleArr = parseSchedule(input.value);
+                status.textContent = "Saving…";
+                await postSchedule(scheduleArr);
+                status.textContent = "Saved.";
+                await refreshUI(); // re-fetch to show server truth
+                } catch (err) {
+                status.textContent = `Error saving: ${err.message}`;
+                }
+            });
+
+            // initial load
+            refreshUI();
+        });
+
+
+
+
 
 
     }

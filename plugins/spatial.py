@@ -7,6 +7,8 @@ from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
 from lib.motion_planner import gantry_planner as gp
+from lib.motion_planner import routine_coordinator
+
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
@@ -273,3 +275,49 @@ def motion_routine(device):
             })
 
     return jsonify(motion_routine)
+
+
+@plugin_blueprint.route("/routine_schedule/<string:device>", methods=["GET", "POST"])
+def routine_schedule(device):
+
+    if device not in serial_device_list:
+        abort(404)
+
+    config_file = load_config(app_root_path, "panels.json")[panel_association]['config']['set_to']
+    config_params = load_config(app_root_path, config_file)
+    schedule_config = None
+    routine_schedule = None
+    schedule_param = None
+
+    for param, config in config_params.items():
+        if config["type"] == "linear_gantry_config" and config["associated_serial_device"]==device:
+            schedule_config = config
+            routine_schedule = config["routine_schedule"]
+            schedule_param= param
+
+    if schedule_config is None or routine_schedule is None:
+        abort(404)
+
+    if request.method == "POST":
+        data = request.get_json()
+
+        if not data:
+            return jsonify({"error": "No JSON received"}), 400
+        
+
+        config_params[schedule_param]["routine_schedule"] =  data["schedule"]
+        
+        # Save the updated config back to JSON
+        with open(os.path.join(app_root_path, "config", config_file), "w") as file:
+            json.dump(config_params, file, indent=4)
+        
+        ## Note: may potentially need to include reload plugin routine, pending testing
+        # reload_plugins(app,socketio)
+        flash(f"{device} motion routine update in {config_file}", "success")
+        
+        return jsonify({
+                "status": "ok",
+                "file": config_file,
+            })
+
+    return jsonify(routine_schedule)

@@ -296,6 +296,106 @@
   .teach-row-active{ outline: 2px solid #cde; outline-offset: -2px; }
   .teach-row-locked{ opacity: 0.8; }
 
+  /* ================= Scheduler panel ================= */
+
+  .scheduler {
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  /* max-width: 520px; */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* --- Title / label --- */
+.scheduler label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+/* --- Input row layout --- */
+.schedule-parser {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- Input box --- */
+.schedule-input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.schedule-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+/* --- Save button --- */
+.schedule-send {
+  margin-top: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.schedule-send:hover {
+  background: #2563eb;
+}
+
+.schedule-send:active {
+  transform: translateY(1px);
+}
+
+/* --- Status text --- */
+.scheduler-status {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #555;
+  min-height: 18px;
+}
+
+/* optional status colors you can toggle with JS */
+.scheduler-status.ok { color: #15803d; }
+.scheduler-status.error { color: #b91c1c; }
+.scheduler-status.loading { color: #6b7280; }
+
+/* --- Current config display --- */
+.scheduler-curr {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f6f7f9;
+  border: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  color: #333;
+  white-space: pre-wrap;
+  max-height: 180px;
+  overflow: auto;
+}
+
+/* --- Responsive tweak --- */
+@media (max-width: 600px) {
+  .scheduler {
+    padding: 12px;
+  }
+}
+
+
 </style>
 
 
@@ -356,7 +456,7 @@
     <div class="teach-title">Teach Sequence</div>
     <button class="teach-start">Start Teaching</button>
     <button class="teach-stop" disabled>Stop</button>
-    <button class="teach-savejson" disabled>Save Sequence (JSON)</button>
+    <button class="teach-savejson" disabled>Save Sequence</button>
   </div>
 
   <div class="teach-meta">
@@ -387,4 +487,17 @@
   </div>
 
   <div class="teach-status"></div>
+</div>
+
+
+<div class="scheduler" control-device="motor_driver">
+  <h3>Routine Scheduler</h3>
+  <div class="schedule-parser">
+    <label>Enter Schedule sequence:</label>
+    <input class="schedule-input" type="text"
+      placeholder='ex. ["00:00-12:00;60", "13:00", "14:00-23:00;30"]'>
+    <button class="schedule-send">Save</button>
+  </div>
+  <div class="scheduler-status"></div>
+  <div class="scheduler-curr"></div>
 </div>
