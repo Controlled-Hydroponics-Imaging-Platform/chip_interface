@@ -460,11 +460,6 @@ window.pluginRegistry.push({
                 }
             }
 
-
-
-
-
-
             function updateCurrentPoseUI(pose, ts){
                 curX.textContent = fmt(pose?.x);
                 curY.textContent = fmt(pose?.y);
@@ -745,10 +740,34 @@ window.pluginRegistry.push({
             const status = panel.querySelector(".scheduler-status");
             const curr = panel.querySelector(".scheduler-curr");
 
+            const routineToggle = panel.querySelector(".routine-active-toggle");
+            const routineLabel = panel.querySelector(".routine-active-label");
+            const lastEl = panel.querySelector(".routine-last-trigger");
+            const nextEl = panel.querySelector(".routine-next-trigger");
+            const untilEl = panel.querySelector(".routine-time-until");
+
+            let pollTimer = null;
+
+            const POLL_MS = 1000;
+
             function safeStringify(obj) {
                 try { return JSON.stringify(obj, null, 2); }
                 catch { return String(obj); }
             }
+
+            async function fetchProcessedData() {
+                const resp = await fetch(`/spatial/processed_data?device=${encodeURIComponent(device)}`, {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+                });
+
+                if (!resp.ok) {
+                const txt = await resp.text().catch(() => "");
+                throw new Error(`processed_data GET failed: HTTP ${resp.status} ${txt}`);
+                }
+                return resp.json();
+            }
+            
 
             async function fetchCurrentConfig() {
                 const resp = await fetch(`/spatial/routine_schedule/${encodeURIComponent(device)}`, {
@@ -790,18 +809,68 @@ window.pluginRegistry.push({
                 return resp.json().catch(() => ({}));
             }
 
+
+            function setToggleFromServer(isActive) {
+                const active = !!isActive;
+
+                // avoid emitting when we are just syncing UI
+                routineToggle.dataset.syncing = "1";
+                routineToggle.checked = active;
+                routineToggle.dataset.syncing = "0";
+
+                routineLabel.textContent = active ? "(active)" : "(inactive)";
+            }
+
+            function emitRoutineActive(active) {
+                if (typeof socket === "undefined" || !socket) {
+                status.textContent = "Socket not available (cannot toggle routine).";
+                return;
+                }
+
+                const msg = active ? "activate" : "disactivate";
+
+                socket.emit("set_routine_state", {
+                device,
+                payload: msg,
+                });
+
+                status.textContent = `Routine toggle sent: ${msg}`;
+            }
+
+            function setScheduleMetaFromServer(scheduleData) {
+                const last = scheduleData?.last_trigger ?? null;
+                const next = scheduleData?.next_scheduled_trigger ?? null;
+                const until = scheduleData?.time_until_next_trigger ?? null;
+
+                if (lastEl) lastEl.textContent = last ? String(last) : "—";
+                if (nextEl) nextEl.textContent = next ? String(next) : "—";
+                if (untilEl) untilEl.textContent = until ? String(until) : "—";
+            }
+
+
+            async function refreshScheduleMeta() {
+                const processed = await fetchProcessedData();
+                const scheduleData = processed?.schedule_data || {};
+
+                setToggleFromServer(scheduleData?.routine_active);
+                setScheduleMetaFromServer(scheduleData);
+            }
+
+
             async function refreshUI() {
                 try {
-                status.textContent = "Loading current schedule…";
-                const data = await fetchCurrentConfig();
+                    status.textContent = "Loading current schedule…";
+                    const data = await fetchCurrentConfig();
 
-                // show full current config
-                // curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
-                curr.textContent = JSON.stringify(data);
+                    // show full current config
+                    // curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
+                    curr.textContent = JSON.stringify(data);    
 
-                status.textContent = "Schedule Loaded.";
+                    await refreshScheduleMeta();
+
+                    status.textContent = "Schedule Loaded.";
                 } catch (err) {
-                status.textContent = `Error loading: ${err.message}`;
+                    status.textContent = `Error loading: ${err.message}`;
                 }
             }
 
@@ -817,8 +886,29 @@ window.pluginRegistry.push({
                 }
             });
 
+
+            routineToggle.addEventListener("change", async () => {
+                // ignore changes that came from setToggleFromServer()
+                if (routineToggle.dataset.syncing === "1") return;
+
+                const active = routineToggle.checked;
+                emitRoutineActive(active);
+
+                // optional: re-fetch soon after to reflect server truth
+                // (helps if the server rejects/overrides)
+                setTimeout(refreshUI, 400);
+            });
+
+
             // initial load
             refreshUI();
+
+            pollTimer = setInterval(() => {
+                refreshScheduleMeta().catch(err => {
+                    // don't spam status every second—only show once in a while if you want
+                    // status.textContent = `Poll error: ${err.message}`;
+                });
+            }, POLL_MS);
         });
 
 

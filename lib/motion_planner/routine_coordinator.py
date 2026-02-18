@@ -82,6 +82,7 @@ class RoutineHandler:
 
     def set_schedule(self, schedule=["00:00-23:00;60"]):
         self.trigger_times, self.schedule= _expand_schedule(schedule)
+        self.last_check = None
         print(f"{self.associated_device_name} schedule set: \n{self.schedule}")
 
 
@@ -192,6 +193,8 @@ class RoutineHandler:
         self._running = True
         self.task = threading.Thread(target=self.run_routine, kwargs={"with_catchup": with_catchup}, daemon=True)
         self.task.start()
+
+        print(f"{self.associated_device_name} routine Activated")
         
 
     def kill(self):
@@ -199,18 +202,23 @@ class RoutineHandler:
         if self.task:
             self.task.join(timeout=5)
             self.task = None
+        
+        self.last_check= None
+        
+        print(f"{self.associated_device_name} routine De-activated")
+
     
     def get_output(self):
 
-        next_trig, time_unitl_next_trig = self.get_next_trigger_info()
+        next_trig, time_until_next_trig = self.get_next_trigger_info()
         
         out = {
             "last_trigger": self.last_trigger,
-            "last_check": self.last_check.isoformat(),
+            "last_check": self.last_check.isoformat() if self.last_check else self.last_check,
             "routine_active": self._running,
             "trigger_schedule": self.schedule,
             "next_scheduled_trigger": next_trig,
-            "time_until_next_trigger": time_unitl_next_trig
+            "time_until_next_trigger": time_until_next_trig
         }
         
         return out

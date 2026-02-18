@@ -71,7 +71,7 @@ def process_driver_data(raw_serial_output):
 
 ## Callback for routine scheduler
 def linear_gantry_routine_callback():
-    pass
+    print("action was hit")
 
 
 
@@ -130,6 +130,23 @@ def register_serial_sockets(SerialReader, socketio, app):
 
 
 def register_socket_handlers(socketio):
+
+    @socketio.on("set_routine_state")
+    def set_routine_state(msg):
+        device =msg["device"]
+        
+        if msg["payload"] =="activate":
+            device_routine_coordinator_list[device].start()
+            out = linear_gantry_device_list[device].standby(True)
+            if out:
+                serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+
+        elif msg["payload"] == "disactivate":
+            device_routine_coordinator_list[device].kill()
+            out = linear_gantry_device_list[device].standby(True)
+            if out:
+                serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+            
     @socketio.on("moveto_xyzv")
     def move_to_xyz(msg):
         print(msg)
@@ -205,7 +222,7 @@ def register_socket_handlers(socketio):
         else:
             print("command not resigstered to socket callback")
 
-    return "moveto_xyzv, platform_command_parser"
+    return "moveto_xyzv, platform_command_parser, set_routine_state"
 
 
 def reload_routine(socketio, app):
@@ -246,7 +263,7 @@ def get_serial_data():
 
     output_data = serial_device_list[device].last_output
     output_data["pose_data"] = linear_gantry_device_list[device].get_current_pose()
-
+    output_data["schedule_data"] = device_routine_coordinator_list[device].get_output()
     return jsonify(output_data)  # Return JSON response
 
 

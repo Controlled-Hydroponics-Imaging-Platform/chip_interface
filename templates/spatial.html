@@ -309,102 +309,209 @@
   }
   /* ================= Scheduler panel ================= */
 
-  .scheduler {
-  border: 1px solid #d9d9d9;
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin: 12px 0;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  /* max-width: 520px; */
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-}
+    .scheduler .schedule-parser > label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #333;
+    }
 
-/* --- Title / label --- */
-.scheduler label {
-  display: block;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-  color: #333;
-}
+    /* --- Title / label --- */
+    .scheduler label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #333;
+    }
 
-/* --- Input row layout --- */
-.schedule-parser {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+    /* --- Input row layout --- */
+    .schedule-parser {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    }
 
-/* --- Input box --- */
-.schedule-input {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
+    /* --- Input box --- */
+    .schedule-input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    }
 
-.schedule-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
-}
+    .schedule-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+    }
 
-/* --- Save button --- */
-.schedule-send {
-  margin-top: 6px;
-  padding: 7px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.05s;
-}
+    /* --- Save button --- */
+    .schedule-send {
+    margin-top: 6px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+    }
 
-.schedule-send:hover {
-  background: #2563eb;
-}
+    .schedule-send:hover {
+    background: #2563eb;
+    }
 
-.schedule-send:active {
-  transform: translateY(1px);
-}
+    .schedule-send:active {
+    transform: translateY(1px);
+    }
 
-/* --- Status text --- */
-.scheduler-status {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: #555;
-  min-height: 18px;
-}
+    /* --- Status text --- */
+    .scheduler-status {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #555;
+    min-height: 18px;
+    }
 
-/* optional status colors you can toggle with JS */
-.scheduler-status.ok { color: #15803d; }
-.scheduler-status.error { color: #b91c1c; }
-.scheduler-status.loading { color: #6b7280; }
+    /* optional status colors you can toggle with JS */
+    .scheduler-status.ok { color: #15803d; }
+    .scheduler-status.error { color: #b91c1c; }
+    .scheduler-status.loading { color: #6b7280; }
 
-/* --- Current config display --- */
-.scheduler-curr {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #f6f7f9;
-  border: 1px solid #e5e7eb;
-  font-size: 0.8rem;
-  color: #333;
-  white-space: pre-wrap;
-  max-height: 180px;
-  overflow: auto;
-}
+    /* --- Current config display --- */
+    .scheduler-curr {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #f6f7f9;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8rem;
+    color: #333;
+    white-space: pre-wrap;
+    max-height: 180px;
+    overflow: auto;
+    }
 
-/* --- Responsive tweak --- */
-@media (max-width: 600px) {
-  .scheduler {
-    padding: 12px;
-  }
-}
+    /* --- Responsive tweak --- */
+    @media (max-width: 600px) {
+    .scheduler {
+        padding: 12px;
+    }
+    }
+ 
+
+    /* ===== Routine toggle ===== */
+
+    .routine-toggle{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:10px 0 12px 0;
+    }
+
+    /* prevent scheduler's generic label rule from breaking layout */
+    .scheduler .routine-switch{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    user-select:none;
+    margin:0;              /* override scheduler label margin */
+    }
+
+    /* hide checkbox but keep accessibility */
+    .routine-switch input{
+    position:absolute;
+    opacity:0;
+    width:0;
+    height:0;
+    }
+
+    /* track */
+    .routine-slider{
+    position:relative;
+    width:44px;
+    height:22px;
+    background:#d1d5db;
+    border-radius:999px;
+    transition:background .25s ease;
+    flex-shrink:0;
+    }
+
+    /* knob */
+    .routine-slider::before{
+    content:"";
+    position:absolute;
+    left:3px;
+    top:3px;
+    width:16px;
+    height:16px;
+    background:white;
+    border-radius:50%;
+    transition:transform .25s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    }
+
+    /* ON state — blue to match your buttons */
+    .routine-switch input:checked + .routine-slider{
+    background:#3b82f6;
+    }
+
+    /* move knob */
+    .routine-switch input:checked + .routine-slider::before{
+    transform:translateX(22px);
+    }
+
+    /* hover polish */
+    .routine-switch:hover .routine-slider{
+    filter:brightness(0.95);
+    }
+
+    /* keyboard focus */
+    .routine-switch input:focus-visible + .routine-slider{
+    outline:2px solid rgba(59,130,246,0.35);
+    outline-offset:2px;
+    }
+
+    /* text next to toggle */
+    .routine-text{
+    font-size:0.95rem;
+    font-weight:500;
+    color:#333;
+    }
+
+    /* server status label */
+    .routine-active-label{
+    font-size:0.85rem;
+    color:#6b7280;
+    }
+
+    .routine-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 14px;
+    margin: 6px 0 10px 0;
+    font-size: 0.85rem;
+    color:#334155;
+    }
+    .routine-meta-item{
+    display:flex;
+    gap:6px;
+    align-items:baseline;
+    padding: 4px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background:#f8fafc;
+    }
+    .routine-meta-k{
+    color:#64748b;
+    font-weight:600;
+    }
+
 
 
 </style>
@@ -505,6 +612,32 @@
 
 <div class="scheduler" control-device="motor_driver">
   <h3>Routine Scheduler</h3>
+
+  <div class="routine-toggle">
+    <label class="routine-switch">
+        <input class="routine-active-toggle" type="checkbox">
+        <span class="routine-slider"></span>
+        <span class="routine-text">Routine Active</span>
+    </label>
+    <span class="routine-active-label"></span>
+  </div>
+
+  <div class="routine-meta">
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">Last:</span>
+        <span class="routine-last-trigger">—</span>
+    </div>
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">Next:</span>
+        <span class="routine-next-trigger">—</span>
+    </div>
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">In:</span>
+        <span class="routine-time-until">—</span>
+    </div>
+  </div>
+
+
   <div class="schedule-parser">
     <label>Enter Schedule sequence:</label>
     <input class="schedule-input" type="text"
