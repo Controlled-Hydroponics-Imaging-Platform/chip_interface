@@ -64,11 +64,13 @@ def _expand_schedule(schedule, default_step=60, sort_output=True, unique=True):
 class RoutineHandler:
     def __init__(self,
                  action_callback,
-                 poll_rate = 1 # in seconds
+                 poll_rate = 1, # in seconds
+                 associated_device_name = "routine_device"
                  ):
         
         self.task = None
         self._running = False
+        self.associated_device_name = associated_device_name 
 
         self.poll_rate= poll_rate
         self.action_triggered = False
@@ -80,6 +82,8 @@ class RoutineHandler:
 
     def set_schedule(self, schedule=["00:00-23:00;60"]):
         self.trigger_times, self.schedule= _expand_schedule(schedule)
+        print(f"{self.associated_device_name} schedule set: \n{self.schedule}")
+
 
     def get_schedule(self):
         return self.schedule
@@ -171,22 +175,22 @@ class RoutineHandler:
         return next_trig.strftime("%Y-%m-%d %H:%M"), duration_str
 
 
-    def run_routine(self):
+    def run_routine(self, with_catchup = False):
         if not self.trigger_times:
             print("Schedule not set")
             return
 
         while self._running:
-            if self.should_trigger():
+            if self.should_trigger(with_catchup=with_catchup):
                 self.action_callback()
             
             sleep(self.poll_rate)
             
 
-    def start(self):
+    def start(self, with_catchup=False):
         self.kill()
         self._running = True
-        self.task = threading.Thread(target=self.run_routine, daemon=True)
+        self.task = threading.Thread(target=self.run_routine, kwargs={"with_catchup": with_catchup}, daemon=True)
         self.task.start()
         
 

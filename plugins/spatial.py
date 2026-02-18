@@ -22,8 +22,10 @@ serial_reader_alias = None
 serial_device_list = {}
 linear_gantry_device_list = {}
 data_handler_list = {}
+device_routine_coordinator_list= {}
 app_root_path = None
 
+## Callbacks
 def process_driver_data(raw_serial_output):
     # Example raw input: [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
     data_dict = {
@@ -67,6 +69,15 @@ def process_driver_data(raw_serial_output):
 
     return data_dict
 
+## Callback for routine scheduler
+def linear_gantry_routine_callback():
+    pass
+
+
+
+
+
+
 
 def load_config(root_path, config_file):
         config_path = os.path.join(root_path, "config", config_file)  # Correct path
@@ -78,7 +89,7 @@ def load_config(root_path, config_file):
             return {}
 
 def register_serial_sockets(SerialReader, socketio, app):
-    global serial_device_list, serial_reader_alias, linear_gantry_device_list
+    global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
     global app_root_path
 
     serial_reader_alias = SerialReader
@@ -101,17 +112,21 @@ def register_serial_sockets(SerialReader, socketio, app):
             serial_device.start()
             serial_device_list[serial_device.device_name]= serial_device
         elif param["type"] == "linear_gantry_config":
-
+            # Load Linear gantry planners
             linear_gantry_device = gp.LinearGantryPlanner( limits = param["frame_limits_mm"], 
                             home_dirs = param["home_direction"] , 
                             mm_per_revs = param["mm_per_rev"], 
                             default_home_pose= param["default_home_pose"], 
                             max_speed =  param["max_linear_vel"], #in mm/s
+                            associated_device_name= param["associated_serial_device"]
                             )
-            
+            linear_gantry_device.load_motion_routine(param["motion_routine"])
             linear_gantry_device_list[param["associated_serial_device"]] = linear_gantry_device
 
-
+            # Load routine coordinators
+            device_routine_coordinator = routine_coordinator.RoutineHandler(linear_gantry_routine_callback,associated_device_name= param["associated_serial_device"])
+            device_routine_coordinator.set_schedule(param["routine_schedule"])
+            device_routine_coordinator_list[param["associated_serial_device"]]  = device_routine_coordinator
 
 
 def register_socket_handlers(socketio):
@@ -200,6 +215,12 @@ def reload_routine(socketio, app):
     for device in serial_device_list.values():
         device.kill()
     serial_device_list.clear()
+    
+    # Kill any running routine devices
+    for device in device_routine_coordinator_list.values():
+        device.kill()
+    device_routine_coordinator_list.clear()
+
     linear_gantry_device_list.clear()
 
     # Re-register
@@ -266,6 +287,10 @@ def motion_routine(device):
         
         ## Note: may potentially need to include reload plugin routine, pending testing
         # reload_plugins(app,socketio)
+        ## reload motion_routine
+        # linear_gantry_device_list[device].kill()
+        linear_gantry_device_list[device].load_motion_routine(config_params[motion_param]["motion_routine"])
+
         flash(f"{device} motion routine update in {config_file}", "success")
         
         return jsonify({
@@ -313,6 +338,9 @@ def routine_schedule(device):
         
         ## Note: may potentially need to include reload plugin routine, pending testing
         # reload_plugins(app,socketio)
+        ## reload schedule
+        device_routine_coordinator_list[device].set_schedule(config_params[schedule_param]["routine_schedule"])
+
         flash(f"{device} motion routine update in {config_file}", "success")
         
         return jsonify({
