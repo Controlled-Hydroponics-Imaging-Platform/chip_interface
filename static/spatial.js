@@ -407,6 +407,8 @@ window.pluginRegistry.push({
             const curStale = panel.querySelector(".teach-cur-stale");
             const curTs = panel.querySelector(".teach-cur-ts");
 
+            const curr = panel.querySelector(".routine-curr");
+
             let teaching = false;
             let activeRowId = null;
             let lastPose = { x: null, y: null, z: null, pose_is_stale: true, ts: null };
@@ -419,6 +421,49 @@ window.pluginRegistry.push({
             function fmt(n){
                 return (n === null || n === undefined) ? "—" : Number(n).toFixed(2);
             }
+
+            function safeStringify(obj) {
+                try { return JSON.stringify(obj, null, 2); }
+                catch { return String(obj); }
+            }
+
+            async function fetchCurrentConfig() {
+                const resp = await fetch(`/spatial/motion_routine/${encodeURIComponent(device)}`, {
+                method: "GET",
+                headers: { "Accept": "application/json" },
+                });
+
+                if (!resp.ok) {
+                const txt = await resp.text().catch(() => "");
+                throw new Error(`GET failed: HTTP ${resp.status} ${txt}`);
+                }
+                return resp.json();
+            }
+
+
+            async function refreshUI() {
+                try {
+                // status.textContent = "Loading current schedule…";
+                setStatus("Loading current schedule…");
+                const data = await fetchCurrentConfig();
+
+                // show full current config
+                // curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
+                curr.textContent = JSON.stringify(data);
+                setStatus("Current Routine Loaded");
+                
+
+                // status.textContent = "Schedule Loaded.";
+                } catch (err) {
+                    setStatus(`Error loading: ${err.message}`);
+                // status.textContent = `Error loading: ${err.message}`;
+                }
+            }
+
+
+
+
+
 
             function updateCurrentPoseUI(pose, ts){
                 curX.textContent = fmt(pose?.x);
@@ -573,8 +618,6 @@ window.pluginRegistry.push({
                 stopBtn.disabled = false;
                 saveBtn.disabled = false;
 
-                // if(){}
-
                 setStatus("Teaching started. Move robot, row will auto-fill, then click Save Position.");
 
                 // start with fresh table
@@ -623,7 +666,14 @@ window.pluginRegistry.push({
 
                     const json = await res.json();
                     // const res_msg=JSON.stringify(json)
+                    // start with fresh table
+                    rowsTbody.innerHTML = "";
+                    sequence.length = 0;
+                    activeRowId = null;
+
+                    await refreshUI();
                     setStatus(`Sequence saved successfully (${json.points_saved}).`);
+
 
                 } catch (err) {
                     setStatus(`Save failed: ${err.message}`);
@@ -656,10 +706,6 @@ window.pluginRegistry.push({
                 curY.textContent = (y === null || y === undefined) ? "—" : Number(y).toFixed(2);
                 curZ.textContent = (z === null || z === undefined) ? "—" : Number(z).toFixed(2);
 
-                // curX.textContent = Number.isFinite(Number(x)) ? Number(x).toFixed(2) : "—";
-                // curY.textContent = Number.isFinite(Number(y)) ? Number(y).toFixed(2) : "—";
-                // curZ.textContent = Number.isFinite(Number(z)) ? Number(z).toFixed(2) : "—";
-
                 curStale.textContent = stale ? " (STALE)" : " (OK)";
                 curStale.style.opacity = stale ? "1" : "0.7";
                 curTs.textContent = ts ? ` @ ${ts}` : "";
@@ -685,6 +731,7 @@ window.pluginRegistry.push({
 
             // Initialize UI
             updateCurrentPoseUI({x:null,y:null,z:null,pose_is_stale:true}, null);
+            refreshUI();
             saveBtn.disabled = true;
             stopBtn.disabled = true;
         });
@@ -749,15 +796,8 @@ window.pluginRegistry.push({
                 const data = await fetchCurrentConfig();
 
                 // show full current config
-                curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
-
-                // if backend returns an unexpanded schedule list, prefill the input
-                // adjust these keys to match your backend response shape:
-                const unexpanded = data.schedule ?? data.trigger_schedule ?? data.config?.schedule;
-
-                if (Array.isArray(unexpanded)) {
-                    input.value = JSON.stringify(unexpanded);
-                }
+                // curr.innerHTML = `<pre style="margin:0; white-space:pre-wrap;">${safeStringify(data)}</pre>`;
+                curr.textContent = JSON.stringify(data);
 
                 status.textContent = "Schedule Loaded.";
                 } catch (err) {
@@ -780,9 +820,6 @@ window.pluginRegistry.push({
             // initial load
             refreshUI();
         });
-
-
-
 
 
 
