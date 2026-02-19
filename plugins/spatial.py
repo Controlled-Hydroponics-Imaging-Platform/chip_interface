@@ -107,7 +107,7 @@ def linear_gantry_routine_callback(device):
             time.sleep(0.01)
             serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
 
-        print(f"moving to {out["target_pose"]}")
+        print(f"moving to {out['target_pose']}")
         time.sleep(out['t_s']*2)
         print(f"{device}: current pose{linear_gantry_device_list[device].get_current_pose()}")
 
