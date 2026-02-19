@@ -107,7 +107,7 @@ def linear_gantry_routine_callback(device):
 
         print(f"moving to {out["target_pose"]}")
         time.sleep(out['t_s']*2)
-        print(f"current pose{linear_gantry_device_list[device].get_current_pose()}")
+        print(f"{device}: current pose{linear_gantry_device_list[device].get_current_pose()}")
 
         #### This is where the data protocol goes
     
@@ -119,7 +119,7 @@ def linear_gantry_routine_callback(device):
         serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
 
     next_trigger, _ = device_routine_coordinator_list[device].get_next_trigger_info()
-    print(f"done until {next_trigger}")
+    print(f"{device}: Done until {next_trigger}")
 
 
 def load_config(root_path, config_file):
