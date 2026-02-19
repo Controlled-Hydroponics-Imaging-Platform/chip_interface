@@ -84,8 +84,8 @@ def linear_gantry_routine_callback(device):
         serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
 
     time.sleep(1)
-    ## Calibrate
 
+    ## Calibrate
     out = linear_gantry_device_list[device].home(True)
     if out:
         serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
@@ -95,7 +95,6 @@ def linear_gantry_routine_callback(device):
     
     time.sleep(out["t_s"]*2)
     print(f"{device}: Done calibrating")
-
 
     ## While routine (Motion and data)
     while (res:=linear_gantry_device_list[device].next())[1]:
@@ -114,7 +113,6 @@ def linear_gantry_routine_callback(device):
     
     print(f"Finished Routine entering standby")
 
-
     ## Standby On
     out = linear_gantry_device_list[device].standby(True)
     if out:
@@ -122,8 +120,6 @@ def linear_gantry_routine_callback(device):
 
     next_trigger, _ = device_routine_coordinator_list[device].get_next_trigger_info()
     print(f"done until {next_trigger}")
-
-
 
 
 def load_config(root_path, config_file):
