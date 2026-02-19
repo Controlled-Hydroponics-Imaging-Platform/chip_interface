@@ -21,11 +21,12 @@ scripts =["spatial.js"]
 serial_reader_alias = None
 serial_device_list = {}
 linear_gantry_device_list = {}
-data_handler_list = {}
 device_routine_coordinator_list= {}
+# data_handler_list = {}
 app_root_path = None
 
-## Callbacks
+###### Callbacks background and threaded processes: Serial proceses_driver_data, Routine scheduler gantry planner and data proc action callback(linear_gantry_routine_callback) 
+
 def process_driver_data(raw_serial_output):
     # Example raw input: [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
     data_dict = {
@@ -69,12 +70,10 @@ def process_driver_data(raw_serial_output):
 
     return data_dict
 
-## Callback for routine scheduler
 def linear_gantry_routine_callback(device):
     """
-    Workflow:
-    standby off > calibrate > while data and motion routine >  standby on
-
+    Callback for routine scheduler
+    Workflow: standby off > calibrate > while data and motion routine >  standby on
     """
     ## Standby off
     print(f"{device} action routine triggered")
@@ -122,6 +121,8 @@ def linear_gantry_routine_callback(device):
     print(f"{device}: Done until {next_trigger}")
 
 
+###### Utility Functions
+
 def load_config(root_path, config_file):
         config_path = os.path.join(root_path, "config", config_file)  # Correct path
         try:
@@ -130,6 +131,8 @@ def load_config(root_path, config_file):
         except json.JSONDecodeError as e:
             print(f"🚨 JSON Error: {e}")
             return {}
+
+###### Plugin Dependency and parameter loading functions 
 
 def register_serial_sockets(SerialReader, socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
@@ -287,7 +290,8 @@ def reload_routine(socketio, app):
     register_serial_sockets(serial_reader_alias, socketio, app)
 
 
-# API
+###### API: /spatial/...
+
 @plugin_blueprint.route("/serial_devices")
 def get_serial_devices():
     output={}
