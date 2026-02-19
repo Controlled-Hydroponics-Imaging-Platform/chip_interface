@@ -70,11 +70,58 @@ def process_driver_data(raw_serial_output):
     return data_dict
 
 ## Callback for routine scheduler
-def linear_gantry_routine_callback():
-    print("action was hit")
+def linear_gantry_routine_callback(device):
+    """
+    Workflow:
+    standby off > calibrate > while data and motion routine >  standby on
+
+    """
+    ## Standby off
+    print(f"{device} action routine triggered")
+
+    out = linear_gantry_device_list[device].standby(False)
+    if out:
+        serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+
+    time.sleep(1)
+    ## Calibrate
+
+    out = linear_gantry_device_list[device].home(True)
+    if out:
+        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        time.sleep(0.01)
+        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+    print(f"{device}: calibrating")
+    
+    time.sleep(out["t_s"]*2)
+    print(f"{device}: Done calibrating")
 
 
+    ## While routine (Motion and data)
+    while (res:=linear_gantry_device_list[device].next())[1]:
+        out =res[0]
+        
+        if out:
+            serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+            time.sleep(0.01)
+            serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
 
+        print(f"moving to {out["target_pose"]}")
+        time.sleep(out['t_s']*2)
+        print(f"current pose{linear_gantry_device_list[device].get_current_pose()}")
+
+        #### This is where the data protocol goes
+    
+    print(f"Finished Routine entering standby")
+
+
+    ## Standby On
+    out = linear_gantry_device_list[device].standby(True)
+    if out:
+        serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+
+    next_trigger, _ = device_routine_coordinator_list[device].get_next_trigger_info()
+    print(f"done until {next_trigger}")
 
 
 
@@ -124,7 +171,7 @@ def register_serial_sockets(SerialReader, socketio, app):
             linear_gantry_device_list[param["associated_serial_device"]] = linear_gantry_device
 
             # Load routine coordinators
-            device_routine_coordinator = routine_coordinator.RoutineHandler(linear_gantry_routine_callback,associated_device_name= param["associated_serial_device"])
+            device_routine_coordinator = routine_coordinator.RoutineHandler(lambda: linear_gantry_routine_callback(param["associated_serial_device"]),associated_device_name= param["associated_serial_device"])
             device_routine_coordinator.set_schedule(param["routine_schedule"])
             device_routine_coordinator_list[param["associated_serial_device"]]  = device_routine_coordinator
 

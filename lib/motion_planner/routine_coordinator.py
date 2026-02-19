@@ -63,7 +63,7 @@ def _expand_schedule(schedule, default_step=60, sort_output=True, unique=True):
 
 class RoutineHandler:
     def __init__(self,
-                 action_callback,
+                 action_callback, #action that occurs when triggered, pass as lamda if it has args
                  poll_rate = 1, # in seconds
                  associated_device_name = "routine_device"
                  ):
