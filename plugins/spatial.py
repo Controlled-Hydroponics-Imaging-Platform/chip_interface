@@ -28,16 +28,19 @@ app_root_path = None
 ###### Callbacks background and threaded processes: Serial proceses_driver_data, Routine scheduler gantry planner and data proc action callback(linear_gantry_routine_callback) 
 
 def process_driver_data(raw_serial_output):
-    # Example raw input: [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
+    """
+    Processes the raw output from serial device of the chip motor_driver
+    :param raw_serial_output: Example - [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
+    """
     data_dict = {
         axis:{"limit_switch_state": None,
               "speed_rpm": None,
               "direction": None,
               "position_rev": None,
               "position_step": None}
-        for axis in ("x", "y", "z")
-         
+        for axis in ("x", "y", "z")         
     }
+
     # Parse limit switches
     limit_pattern = re.compile(r"([xyz])_limit\(limit_switch\):(\w+)")
     for axis, state in limit_pattern.findall(raw_serial_output):
@@ -59,7 +62,7 @@ def process_driver_data(raw_serial_output):
         data_dict[axis]["position_step"] = int(steps)
 
 
-    #Parse stanby mode
+    #Parse standby mode
     standby_pattern = re.compile(r"([xyz])\(StepperMotor\):Standby\b")
     for axis in standby_pattern.findall(raw_serial_output):
         # You can change these defaults if you prefer
@@ -176,7 +179,7 @@ def register_serial_sockets(SerialReader, socketio, app):
 
 
 def register_socket_handlers(socketio):
-
+    ## Socket activates and deactivates the routine schedulers
     @socketio.on("set_routine_state")
     def set_routine_state(msg):
         device =msg["device"]
@@ -193,22 +196,7 @@ def register_socket_handlers(socketio):
             if out:
                 serial_device_list[device].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
             
-    @socketio.on("moveto_xyzv")
-    def move_to_xyz(msg):
-        print(msg)
-        device =msg["device"]
-        x = float(msg["x"]) 
-        y = float(msg["y"]) 
-        z = float(msg["z"])
-        vel = float(msg["v"])
-        out =linear_gantry_device_list[device].move_to([x,y,z], vel)
-        if out:
-            print(out)
-
-            serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-            time.sleep(0.01)
-            serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
-
+    ## Socket parses commands and translates them into functions for motor driver
     @socketio.on("platform_command_parser")
     def platform_command_parser(msg):
         device =msg["device"]
@@ -268,7 +256,7 @@ def register_socket_handlers(socketio):
         else:
             print("command not resigstered to socket callback")
 
-    return "moveto_xyzv, platform_command_parser, set_routine_state"
+    return "platform_command_parser, set_routine_state"
 
 
 def reload_routine(socketio, app):
