@@ -4,7 +4,7 @@
         "type": "serial_port",
         "value_type": "text",
         "values": [],
-        "set_to": "/dev/ttyACM1",
+        "set_to": "/dev/ttyACM0",
         "baud_rate": 115200,
         "timeout": 1,
         "poll_rate": 0.1
@@ -21,13 +21,13 @@
         "type": "linear_gantry_config",
         "associated_serial_device": "motor_driver",
         "frame_limits_mm": {
-            "x": 1100.0,
-            "y": 500.0,
-            "z": 300.0
+            "x": 1200.0,
+            "y": 600.0,
+            "z": 320.0
         },
         "mm_per_rev": {
-            "x": 64.0,
-            "y": 64.0,
+            "x": 72.0,
+            "y": 72.0,
             "z": 8.0
         },
         "home_direction": {
@@ -43,27 +43,20 @@
         "max_linear_vel": 100.0,
         "motion_routine": [
             {
-                "x": 500,
-                "y": 500,
-                "z": 500,
-                "v": 50
-            },
-            {
-                "x": 250,
-                "y": 250,
-                "z": 250,
-                "v": 50
-            },
-            {
-                "x": 0,
-                "y": 0,
+                "x": 100,
+                "y": 100,
                 "z": 0,
+                "v": 50
+            },
+            {
+                "x": 1000,
+                "y": 500,
+                "z": 200,
                 "v": 50
             }
         ],
         "routine_schedule": [
-            "00:00-23:00;30",
-            "20:06"
+            "16:44"
         ]
     }
 }
