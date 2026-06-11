@@ -18,6 +18,502 @@
         margin: 0 auto;
         object-fit: contain; 
     }
+
+
+    /* Container + card */
+    .position-info-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 12px 0;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    /* Title */
+    .position-info-section > h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    }
+
+    /* Connection status */
+    .motion-status {
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    }
+    .motion-status.connected {
+    border-color: #22c55e;
+    background: #f0fdf4;
+    color: #14532d;
+    }
+    .motion-status.disconnected {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #7f1d1d;
+    }
+
+    /* Message box */
+    .motion-message {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    overflow-x: auto;
+    }
+
+    /* Key–value renderer used by the plugin */
+    .kv-list {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 6px 10px;
+    }
+    .kv-row { display: contents; }
+    .kv-row .k { font-weight: 600; color: #334155; }
+    .kv-row .v { color: #0f172a; }
+
+    .meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 6px;
+    }    
+
+    /* Optional: compact on small screens */
+    @media (max-width: 640px) {
+    .kv-list { grid-template-columns: 1fr; }
+    }
+
+
+    /* ===== Axis table (x / y / z layout) ===== */
+
+    .axis-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;                 /* vertical breathing room */
+    margin-top: 4px;
+    }
+
+    /* Each row */
+    .axis-row {
+    display: grid;
+    grid-template-columns: 160px repeat(3, minmax(60px, 1fr));
+    align-items: center;
+    column-gap: 12px;
+    padding: 4px 0;
+    }
+
+    /* Header row */
+    .axis-header {
+    font-weight: 600;
+    font-size: 12px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    }
+
+    /* Left-side labels (direction, speed_rpm, etc.) */
+    .axis-label {
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+    }
+
+    /* Value cells */
+    .axis-col {
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    }
+
+    /* Alternating rows for readability */
+    .axis-row:not(.axis-header):nth-child(even) .axis-col {
+    background: #ffffff;
+    }
+
+    /* Status coloring (optional but very helpful visually) */
+    .axis-col:has(:not(:empty)) {
+    font-weight: 500;
+    }
+
+    .axis-col:where(:contains("standby")) {
+    color: #64748b;
+    }
+
+    .axis-col:where(:contains("off")) {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fecaca;
+    }
+
+    /* ===== Small screens ===== */
+    @media (max-width: 640px) {
+    .axis-row {
+        grid-template-columns: 120px repeat(3, 1fr);
+        font-size: 12px;
+    }
+
+    .axis-col {
+        padding: 3px 4px;
+    }
+    }
+
+    /* ================= move to control panel ================= */
+
+  .moveto-control-panel{
+  display:flex;
+  flex-wrap: wrap;
+  gap:10px;
+  align-items:flex-end;
+  padding:10px;
+  }
+
+  .moveto-row{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .moveto-row label{
+    font-size:12px;
+    color:#666;
+  }
+
+  .moveto-control-panel input{
+    width:110px;
+    padding:8px;
+    border:2px solid #ccc;
+    border-radius:8px;
+  }
+
+  .moveto-send{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-send:active{ background:#ddd; }
+
+
+  .moveto-home{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-home:active{ background:#ddd; }
+
+
+  .moveto-calibrate{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-calibrate:active{ background:#ddd; }
+
+
+  .moveto-standby{
+    padding:10px 14px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    background:#1100ff;
+    cursor:pointer;
+  }
+
+  .moveto-standby:active{ background:#ddd; }
+
+  .moveto-standby.is-on{
+  background: #ffd6d6;
+  border-color: #c55;
+  }
+
+  .moveto-status{
+    margin-left:10px;
+    font-family: monospace;
+    font-size: 12px;
+    color:#333;
+  }
+
+  .moveto-current{
+    margin-top: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+    flex-basis: 100%;
+  }
+  .moveto-cur-stale{
+    margin-left: 6px;
+    color: #a00;
+  }
+
+  /* ================= teach pendant panel ================= */
+
+  .teach-panel{ padding:12px; border:2px solid #ddd; border-radius:12px; max-width: 920px; }
+  .teach-header{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .teach-title{ font-weight:600; margin-right:10px; }
+  .teach-meta{ margin-top:10px; font-family: monospace; font-size:12px; color:#333; }
+  .teach-cur-stale{ margin-left:6px; color:#a00; }
+  .teach-cur-ts{ margin-left:8px; opacity:0.8; }
+
+  .teach-table-wrap{ margin-top:12px; overflow:auto; }
+  .teach-table{ width:100%; border-collapse:collapse; font-size:14px; }
+  .teach-table th, .teach-table td{ border-bottom:1px solid #eee; padding:8px; text-align:left; }
+  .teach-table th{ font-size:12px; color:#666; }
+
+  .teach-table input{
+    width:110px; padding:7px; border:2px solid #ccc; border-radius:8px;
+  }
+
+  .teach-btn{
+    padding:8px 10px; border-radius:10px; border:2px solid #ccc;
+    background:#1100ff; cursor:pointer; margin-right:6px;
+  }
+  .teach-btn:active{ background:#ddd; }
+  .teach-btn[disabled]{ opacity:0.5; cursor:not-allowed; }
+
+  .teach-status{ margin-top:10px; font-family: monospace; font-size:12px; color:#333; }
+  .teach-row-active{ outline: 2px solid #cde; outline-offset: -2px; }
+  .teach-row-locked{ opacity: 0.8; }
+  .routine-curr {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #f6f7f9;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8rem;
+    color: #333;
+    white-space: pre-wrap;
+    max-height: 180px;
+    overflow: auto;
+  }
+  /* ================= Scheduler panel ================= */
+
+    .scheduler .schedule-parser > label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #333;
+    }
+
+    /* --- Title / label --- */
+    .scheduler label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #333;
+    }
+
+    /* --- Input row layout --- */
+    .schedule-parser {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    }
+
+    /* --- Input box --- */
+    .schedule-input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .schedule-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+    }
+
+    /* --- Save button --- */
+    .schedule-send {
+    margin-top: 6px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.05s;
+    }
+
+    .schedule-send:hover {
+    background: #2563eb;
+    }
+
+    .schedule-send:active {
+    transform: translateY(1px);
+    }
+
+    /* --- Status text --- */
+    .scheduler-status {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #555;
+    min-height: 18px;
+    }
+
+    /* optional status colors you can toggle with JS */
+    .scheduler-status.ok { color: #15803d; }
+    .scheduler-status.error { color: #b91c1c; }
+    .scheduler-status.loading { color: #6b7280; }
+
+    /* --- Current config display --- */
+    .scheduler-curr {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #f6f7f9;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8rem;
+    color: #333;
+    white-space: pre-wrap;
+    max-height: 180px;
+    overflow: auto;
+    }
+
+    /* --- Responsive tweak --- */
+    @media (max-width: 600px) {
+    .scheduler {
+        padding: 12px;
+    }
+    }
+ 
+
+    /* ===== Routine toggle ===== */
+
+    .routine-toggle{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:10px 0 12px 0;
+    }
+
+    /* prevent scheduler's generic label rule from breaking layout */
+    .scheduler .routine-switch{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    user-select:none;
+    margin:0;              /* override scheduler label margin */
+    }
+
+    /* hide checkbox but keep accessibility */
+    .routine-switch input{
+    position:absolute;
+    opacity:0;
+    width:0;
+    height:0;
+    }
+
+    /* track */
+    .routine-slider{
+    position:relative;
+    width:44px;
+    height:22px;
+    background:#d1d5db;
+    border-radius:999px;
+    transition:background .25s ease;
+    flex-shrink:0;
+    }
+
+    /* knob */
+    .routine-slider::before{
+    content:"";
+    position:absolute;
+    left:3px;
+    top:3px;
+    width:16px;
+    height:16px;
+    background:white;
+    border-radius:50%;
+    transition:transform .25s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    }
+
+    /* ON state — blue to match your buttons */
+    .routine-switch input:checked + .routine-slider{
+    background:#3b82f6;
+    }
+
+    /* move knob */
+    .routine-switch input:checked + .routine-slider::before{
+    transform:translateX(22px);
+    }
+
+    /* hover polish */
+    .routine-switch:hover .routine-slider{
+    filter:brightness(0.95);
+    }
+
+    /* keyboard focus */
+    .routine-switch input:focus-visible + .routine-slider{
+    outline:2px solid rgba(59,130,246,0.35);
+    outline-offset:2px;
+    }
+
+    /* text next to toggle */
+    .routine-text{
+    font-size:0.95rem;
+    font-weight:500;
+    color:#333;
+    }
+
+    /* server status label */
+    .routine-active-label{
+    font-size:0.85rem;
+    color:#6b7280;
+    }
+
+    .routine-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 14px;
+    margin: 6px 0 10px 0;
+    font-size: 0.85rem;
+    color:#334155;
+    }
+    .routine-meta-item{
+    display:flex;
+    gap:6px;
+    align-items:baseline;
+    padding: 4px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background:#f8fafc;
+    }
+    .routine-meta-k{
+    color:#64748b;
+    font-weight:600;
+    }
+
+
+
 </style>
 
 
@@ -27,4 +523,127 @@
 
 <div class="video-container">
     <img id="video" src="{{panel_config["camera_server"]["set_to"]}}/video_feed">
+</div>
+
+<div class="position-info-section">
+    <h3>Position Information</h3>
+    <div class="motion-status" data-device="motor_driver"></div>
+    <div class="motion-message" data-device="motor_driver">Waiting for data...</div>
+</div>
+
+<div class="moveto-control-panel" control-device="motor_driver">
+  <div class="moveto-current">
+    Pose: 
+    X=<span class="moveto-cur-x">—</span> mm,
+    Y=<span class="moveto-cur-y">—</span> mm,
+    Z=<span class="moveto-cur-z">—</span> mm
+    <span class="moveto-cur-stale"></span>
+    <span class="moveto-cur-ts"></span>
+  </div>
+
+  <div class="moveto-row">
+    <label>X</label>
+    <input class="moveto-x" type="number" step="1" placeholder="mm">
+  </div>
+
+  <div class="moveto-row">
+    <label>Y</label>
+    <input class="moveto-y" type="number" step="1" placeholder="mm">
+  </div>
+
+  <div class="moveto-row">
+    <label>Z</label>
+    <input class="moveto-z" type="number" step="1" placeholder="mm">
+  </div>
+
+  <div class="moveto-row">
+    <label>Velocity</label>
+    <input class="moveto-v" type="number" step="1" min="0" placeholder="mm/s">
+  </div>
+
+  <button class="moveto-send">Send</button>
+  <button class="moveto-home">Home</button>
+  <button class="moveto-calibrate">Calibrate</button>
+  <button class="moveto-standby">Standby</button>
+
+  <div class="moveto-status"></div>
+</div>
+
+<div class="teach-panel" control-device="motor_driver">
+  <div class="teach-header">
+    <div class="teach-title">Teach Sequence</div>
+    <button class="teach-start">Start Teaching</button>
+    <button class="teach-stop" disabled>Stop</button>
+    <button class="teach-savejson" disabled>Save Sequence</button>
+  </div>
+
+  <div class="teach-meta">
+    Current Pose:
+    X=<span class="teach-cur-x">—</span>,
+    Y=<span class="teach-cur-y">—</span>,
+    Z=<span class="teach-cur-z">—</span>
+    <span class="teach-cur-stale"></span>
+    <span class="teach-cur-ts"></span>
+  </div>
+
+  <div class="teach-table-wrap">
+    <table class="teach-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>X (mm)</th>
+          <th>Y (mm)</th>
+          <th>Z (mm)</th>
+          <th>V (mm/s)</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody class="teach-rows">
+        <!-- rows get added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="teach-status"></div>
+  <div class="routine-curr"></div>
+
+</div>
+
+
+<div class="scheduler" control-device="motor_driver">
+  <h3>Routine Scheduler</h3>
+
+  <div class="routine-toggle">
+    <label class="routine-switch">
+        <input class="routine-active-toggle" type="checkbox">
+        <span class="routine-slider"></span>
+        <span class="routine-text">Routine Active</span>
+    </label>
+    <span class="routine-active-label"></span>
+  </div>
+
+  <div class="routine-meta">
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">Last:</span>
+        <span class="routine-last-trigger">—</span>
+    </div>
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">Next:</span>
+        <span class="routine-next-trigger">—</span>
+    </div>
+    <div class="routine-meta-item">
+        <span class="routine-meta-k">In:</span>
+        <span class="routine-time-until">—</span>
+    </div>
+  </div>
+
+
+  <div class="schedule-parser">
+    <label>Enter Schedule sequence:</label>
+    <input class="schedule-input" type="text"
+      placeholder='ex. ["00:00-12:00;60", "13:00", "14:00-23:00;30"]'>
+    <button class="schedule-send">Save</button>
+  </div>
+  <div class="scheduler-status"></div>
+  <div class="scheduler-curr"></div>
 </div>

@@ -40,7 +40,7 @@
                     <br>
                     <span>timeout: </span><input type="number" name="{{ key }}_timeout" id="{{ key }}_timeout" value="{{ setting["timeout"] }}">
                     <br>
-                    <span>polling rate: </span><input type="number" name="{{ key }}_poll" id="{{ key }}_poll" value="{{ setting["poll_rate"] }}">
+                    <span>polling rate: </span><input type="text" name="{{ key }}_poll" id="{{ key }}_poll" value="{{ setting["poll_rate"] }}">
 
 
                 </div>
@@ -65,10 +65,99 @@
                     <input type="checkbox" name="{{ key }}_auto" id="{{ key }}_auto" {% if setting["auto_enabled"] %}checked{% endif %}><span>auto mode</span> 
                 </div>
             {% elif setting["type"] == "number" %}
-                <input type="number" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+                <div>
+                    <input type="number" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+                </div>
             {% elif setting["type"] == "text" %}
-                <input type="text" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+                <div>
+                    <input type="text" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
+                </div>
+
+            {% elif setting["type"] == "linear_gantry_config" %}
+                <div class="linear-gantry-group">
+                    <!-- <span>associated serial Device: </span><input type="number" name="{{ key }}_extent_cm" id="{{ key }}_extent_cm" value="{{ setting["extent_cm"] }}"> -->
+                    
+                    <span>Associated Serial Device: </span>
+                    <select class="serial_device" name="{{ key }}_associated_serial_device" id="{{ key }}_associated_serial_device" data-selected="{{ setting['associated_serial_device'] }}">
+                        {% for k, v in config_params.items() %}
+                            {%if v["type"] == "serial_port"%}
+                            <option value="{{ k }}" {% if value == setting["associated_serial_device"] %}selected{% endif %}>
+                                {{ k }}
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <br>
+
+                    <span>Frame limits (mm): </span>
+                    <br>
+                    <span>x limit: </span><input type="text" name="{{ key }}_frame_limit_mm_x" id="{{ key }}_frame_limit_mm_x" value="{{ setting["frame_limits_mm"]["x"] }}">
+                    <span>y limit: </span><input type="text" name="{{ key }}_frame_limit_mm_y" id="{{ key }}_frame_limit_mm_y" value="{{ setting["frame_limits_mm"]["y"] }}">
+                    <span>z limit: </span><input type="text" name="{{ key }}_frame_limit_mm_z" id="{{ key }}_frame_limit_mm_z" value="{{ setting["frame_limits_mm"]["z"] }}"> 
+                    <br>
+
+                    <span>Motor rotation configuration (mm/rev): </span>
+                    <br>
+                    <span>x: </span><input type="text" name="{{ key }}_mm_per_rev_x" id="{{ key }}_mm_per_rev_x" value="{{ setting["mm_per_rev"]["x"] }}">
+                    <span>y: </span><input type="text" name="{{ key }}_mm_per_rev_y" id="{{ key }}_mm_per_rev_y" value="{{ setting["mm_per_rev"]["y"] }}">
+                    <span>z: </span><input type="text" name="{{ key }}_mm_per_rev_z" id="{{ key }}_mm_per_rev_z" value="{{ setting["mm_per_rev"]["z"] }}">
+                    <br>
+
+                    <span>Direction towards home: </span>
+                    <br>
+                    <span style="margin-left: 10px; color: gray;">x: {{ "+" if setting["home_direction"]["x"] == 1 else "-" if setting["home_direction"]["x"] == -1 else "" }}</span>
+                    <select class="home-direction" name="{{ key }}_home_direction_x" id="{{ key }}_home_direction_x" data-selected="{{ setting['home_direction']["x"] }}">
+                        <option value=1 {% if setting["home_direction"]["x"] == 1 %}selected{% endif %}>
+                                +
+                        </option>
+                        <option value=-1 {% if setting["home_direction"]["x"] == -1 %}selected{% endif %}>
+                                -
+                        </option>
+                    </select>
+                    
+                    <!-- <br> -->
+                    <span style="margin-left: 10px; color: gray;">y: {{ "+" if setting["home_direction"]["y"] == 1 else "-" if setting["home_direction"]["y"] == -1 else "" }}</span>
+                    <select class="home-direction" name="{{ key }}_home_direction_y" id="{{ key }}_home_direction_y" data-selected="{{ setting['home_direction']["y"] }}">
+                        <option value=1 {% if setting["home_direction"]["y"] == 1 %}selected{% endif %}>
+                                +
+                        </option>
+                        <option value=-1 {% if setting["home_direction"]["y"] == -1 %}selected{% endif %}>
+                                -
+                        </option>
+                    </select>
+
+                    <!-- <br> -->
+                    <span style="margin-left: 10px; color: gray;">z: {{ "+" if setting["home_direction"]["z"] == 1 else "-" if setting["home_direction"]["z"] == -1 else "" }}</span>
+                    <select class="home-direction" name="{{ key }}_home_direction_z" id="{{ key }}_home_direction_z" data-selected="{{ setting['home_direction']["z"] }}">
+                        <option value=1 {% if setting["home_direction"]["z"] == 1 %}selected{% endif %}>
+                                +
+                        </option>
+                        <option value=-1 {% if setting["home_direction"]["z"] == -1 %}selected{% endif %}>
+                                -
+                        </option>
+                    </select>
+                    <br>
+
+                    <span>default home position (mm): </span>
+                    <br>
+                    <span>x: </span><input type="text" name="{{ key }}_default_home_pose_x" id="{{ key }}_default_home_pose_x" value="{{ setting["default_home_pose"]["x"] }}">
+                    <span>y: </span><input type="text" name="{{ key }}_default_home_pose_y" id="{{ key }}_default_home_pose_y" value="{{ setting["default_home_pose"]["y"] }}">
+                    <span>z: </span><input type="text" name="{{ key }}_default_home_pose_z" id="{{ key }}_default_home_pose_z" value="{{ setting["default_home_pose"]["z"] }}">
+                    <br>
+
+                    <span>Max Linear velocity (mm/s): </span>
+                    <input type="text" name="{{ key }}_max_linear_vel" id="{{ key }}_max_linear_vel" value="{{ setting["max_linear_vel"] }}">
+
+                    <br>
+ 
+
+                </div>
+
+
+
+
             {% endif %}
+
             
             <br>
         {% endfor %}

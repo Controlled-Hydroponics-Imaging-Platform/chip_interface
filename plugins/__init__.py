@@ -344,6 +344,9 @@ class SerialReader:
         self.last_output = {}
         self._running = True  # ✅ Control loop for graceful shutdown
 
+        self.ser = None
+        self.ser_lock = threading.Lock()
+
     def start(self):
 
         self.kill()
@@ -360,7 +363,45 @@ class SerialReader:
         if self.task:
             self.task.join(timeout=5)
             self.task = None
+
+        with self.ser_lock:
+            if self.ser:
+                try:
+                    self.ser.close()
+                except:
+                    pass
+                self.ser = None
+        
         print(f"✅ {self.device_name} stopped")
+    
+    def write(self, data, add_newline=True):
+        """
+        Threadsafe write to serial device
+        
+        :param data: Description
+        :param add_newline: Description
+        """
+        if isinstance(data, str):
+            payload = data.encode("utf-8")
+        elif isinstance(data, bytearray):
+            payload = bytes(data)
+        elif isinstance(data, bytes):
+            payload = data
+        else:
+            return False, f"Unsupported type: {type(data)}"
+
+        if add_newline and not payload.endswith(b"\n"):
+            payload += b"\n"
+        
+        with self.ser_lock:
+            if not self.ser or not self.ser.is_open:
+                return False, "Serial not connected"
+            try:
+                self.ser.write(payload)
+                self.ser.flush()
+                return True, None
+            except (serial.SerialException, OSError) as e:
+                return False, str(e)
 
     def read_serial_socket(self):
         try:
@@ -369,6 +410,9 @@ class SerialReader:
                     self.socketio.emit(f"{self.device_name}_status_update", {"status": "connecting", "device": self.port})
                     print(f"🔌 Connecting to serial {self.device_name} ({self.port})...")
                     ser = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
+
+                    with self.ser_lock:
+                        self.ser = ser
 
                     ser.reset_input_buffer()
                     print(f"✅ {self.device_name} ({self.port}): Serial connection established")
@@ -385,13 +429,21 @@ class SerialReader:
                     # Main reading loop
                     while self._running:
                         try:
-                            if ser.in_waiting > 0:
+                            with self.ser_lock:
+                                waiting = ser.in_waiting
+                            
+                            if waiting > 0:
                                 raw_data = None
-                                while ser.in_waiting:
-                                    raw_data = ser.readline().decode('utf-8', errors='ignore').strip()
+                                while True: # this filters through serial queue to get the latest value so it throws out intermediate and prevents lag in realtime data
+                                    with self.ser_lock:
+                                        if ser.in_waiting <=0:
+                                            break
+                                        line = ser.readline()
+                                    raw_data = line.decode('utf-8', errors='ignore').strip()
 
                                 if not raw_data:
-                                    print(f"⚠️ Skipping bad data: {raw_data}")
+                                    sleep(self.poll_rate)
+                                    # print(f"⚠️ Skipping bad data: {raw_data}")
                                     continue
 
                                 processed_data = self.process_raw_data(raw_data)
@@ -413,11 +465,15 @@ class SerialReader:
                     self.socketio.emit(f"{self.device_name}_status_update", {"status": "disconnected", "device": self.port})
 
                 finally:
-                    try:
-                        ser.close()
-                        print(f"⚠️ {self.device_name} Serial connection closed")
-                    except:
-                        pass
+                    with self.ser_lock:
+                        if self.ser:
+                            try:
+                                self.ser.close()
+                            except:
+                                pass
+                            self.ser=None
+                    
+                    print(f"⚠️ {self.device_name} Serial connection closed")
 
                     if self._running:
                         print("🔄 Reconnecting in 5 seconds...")
@@ -449,6 +505,9 @@ def load_all_plugins(app, socketio):
             if hasattr(module, 'register_control_scheduler_sockets'):
                 module.register_control_scheduler_sockets(ControlScheduler, socketio, app)
                 print(f" * {module_name} Control Schedulers started")
+            if hasattr(module, 'register_socket_handlers'):
+                out = module.register_socket_handlers(socketio)
+                print(f" * {module_name} socket handlers registered, listening on:{out}")
             if hasattr(module, 'scripts'):
                 for script in module.scripts: script_list.append(script)
                 print(f" * {', '.join(script for script in module.scripts)} scripts will be loaded")

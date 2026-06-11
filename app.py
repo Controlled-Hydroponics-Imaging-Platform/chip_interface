@@ -179,22 +179,48 @@ def configure(panel):
 
     if request.method == "POST":
         # Process form submission
+        ## Typically u can add configs that are a generic text or number type, and create parameters label, type, value_type, and set_to for quick, but if you have plugin specific parameters, you will need to add to this code under type param  
         new_config = config_params
         for key, params in config_params.items():
-            user_input = request.form.get(key, "")
 
-            if params["value_type"] == "number":
-                new_config[key]["set_to"] = int(user_input)
-            else:
-                new_config[key]["set_to"] = user_input
+            ## Generic Parameter config through value_type 
+            if "value_type" in params:
+                user_input = request.form.get(key, "")
 
+                if params["value_type"] == "number":
+                    new_config[key]["set_to"] = int(user_input)
+                else:
+                    new_config[key]["set_to"] = user_input
+
+            ## Plugin Specific Configuration parameters
             if params["type"] == "kasa_plug":
                 new_config[key]["auto_enabled"]=  True if request.form.get(f"{key}_auto") =="on" else False 
             elif params["type"] == "serial_port":
                 new_config[key]["baud_rate"]=  int(request.form.get(f"{key}_baudrate"))
                 new_config[key]["timeout"]=  int(request.form.get(f"{key}_timeout"))
-                new_config[key]["poll_rate"]=  int(request.form.get(f"{key}_poll"))
+                new_config[key]["poll_rate"]=  float(request.form.get(f"{key}_poll"))
+            elif params["type"] == "linear_gantry_config":
+                new_config[key]["associated_serial_device"] = request.form.get(f"{key}_associated_serial_device")
 
+                new_config[key]["frame_limits_mm"]["x"] = float(request.form.get(f"{key}_frame_limit_mm_x"))
+                new_config[key]["frame_limits_mm"]["y"] = float(request.form.get(f"{key}_frame_limit_mm_y"))
+                new_config[key]["frame_limits_mm"]["z"] = float(request.form.get(f"{key}_frame_limit_mm_z"))
+                
+                new_config[key]["mm_per_rev"]["x"] = float(request.form.get(f"{key}_mm_per_rev_x"))
+                new_config[key]["mm_per_rev"]["y"] = float(request.form.get(f"{key}_mm_per_rev_y"))
+                new_config[key]["mm_per_rev"]["z"] = float(request.form.get(f"{key}_mm_per_rev_z"))
+
+                new_config[key]["home_direction"]["x"] = int(request.form.get(f"{key}_home_direction_x"))
+                new_config[key]["home_direction"]["y"] = int(request.form.get(f"{key}_home_direction_y"))
+                new_config[key]["home_direction"]["z"] = int(request.form.get(f"{key}_home_direction_z"))
+
+                new_config[key]["default_home_pose"]["x"] = float(request.form.get(f"{key}_default_home_pose_x"))
+                new_config[key]["default_home_pose"]["y"] = float(request.form.get(f"{key}_default_home_pose_y"))
+                new_config[key]["default_home_pose"]["z"] = float(request.form.get(f"{key}_default_home_pose_z"))
+                
+                new_config[key]["max_linear_vel"] = float(request.form.get(f"{key}_max_linear_vel"))
+                
+                
 
         # Save the updated config back to JSON
         with open(os.path.join(app.root_path, "config", config_file), "w") as file:
