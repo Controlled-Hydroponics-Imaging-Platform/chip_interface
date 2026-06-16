@@ -277,6 +277,10 @@ def reload_routine(socketio, app):
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)
 
+def data_logging_routine():
+    global serial_device_list, serial_reader_alias, linear_gantry_device_list
+
+
 
 ###### API: /spatial/...
 

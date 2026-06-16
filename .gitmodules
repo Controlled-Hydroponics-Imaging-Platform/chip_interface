@@ -1,0 +1,3 @@
+[submodule "lib/pi-data-storage-handler"]
+	path = lib/pi-data-storage-handler
+	url = git@github.com:mohas95/pi-data-storage-handler.git
