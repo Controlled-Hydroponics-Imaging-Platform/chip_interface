@@ -8,6 +8,8 @@ strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
 from lib.motion_planner import gantry_planner as gp
 from lib.motion_planner import routine_coordinator
+from lib.pi_data_storage_handler import database_handler as dh
+from influxdb_client_3 import InfluxDBClient3, Point
 
 
 plugin_blueprint = Blueprint('spatial',
@@ -24,6 +26,7 @@ linear_gantry_device_list = {}
 device_routine_coordinator_list= {}
 # data_handler_list = {}
 app_root_path = None
+data_base_path = "data/test_database.db"
 
 ###### Callbacks background and threaded processes: Serial proceses_driver_data, Routine scheduler gantry planner and data proc action callback(linear_gantry_routine_callback) 
 
@@ -277,9 +280,18 @@ def reload_routine(socketio, app):
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)
 
-def data_logging_routine():
-    global serial_device_list, serial_reader_alias, linear_gantry_device_list
+# def data_logging_routine(influx_db_client):
+#     global serial_device_list, serial_reader_alias, linear_gantry_device_list
 
+#     # client = InfluxDBClient3(host=host, token=token, org=org)
+
+#     # token = os.environ.get("INFLUXDB_TOKEN")
+#     # org = "CHIP PRD"
+#     # host = "https://us-east-1-1.aws.cloud2.influxdata.com"
+
+#     # client = InfluxDBClient3(host=host, token=token, org=org)
+
+#     spatial_db = dh.SQLiteDataHandler(data_base_path, dh.POSE_TABLE)
 
 
 ###### API: /spatial/...

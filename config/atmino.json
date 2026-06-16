@@ -33,5 +33,12 @@
         "value_type": "text",
         "values": [],
         "set_to": "atmino/sensor_out"
+    },
+    "database_path": {
+        "label": "data storage file",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "data/test_dataset.db"
     }
 }

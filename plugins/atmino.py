@@ -3,11 +3,17 @@ import os, json
 from flask_socketio import SocketIO
 import eventlet
 from datetime import datetime
+from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
+from lib.pi_data_storage_handler import database_handler as dh
+from influxdb_client_3 import InfluxDBClient3, Point
+import threading
+
 
 # topic_list = []
 atmino_device = None
 mqtt_bridge_alias = None
+data_handler = None
 panel_association = "Atmino"
 
 
@@ -28,7 +34,7 @@ def load_config(root_path, config_file):
 
 
 def register_mqtt_sockets(mqttBridge, socketio, app):
-    global mqtt_bridge_alias, atmino_device
+    global mqtt_bridge_alias, atmino_device, data_handler
     mqtt_bridge_alias = mqttBridge
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
@@ -44,6 +50,10 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
                                keepalive=60, 
                                reconnect_min=1, reconnect_max=30)
     
+    
+    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
+    task = threading.Thread(target=data_logging_routine, daemon=True)
+    task.start()
     atmino_device.start();
 
 def reload_routine(socketio, app):
@@ -55,7 +65,15 @@ def reload_routine(socketio, app):
 
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
- 
+
+def data_logging_routine():
+
+    last_output = atmino_device.last_output
+    
+    while True:
+        if atmino_device.last_output != last_output:
+            print("hello")
+        sleep(1)     
 
 # API
 # @plugin_blueprint.route("/topics")
