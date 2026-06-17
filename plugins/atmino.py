@@ -52,8 +52,10 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     
     
     data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
-    task = threading.Thread(target=data_logging_routine, daemon=True)
-    task.start()
+    data_handler.start(data_logging_routine,routine_name="test")
+    
+    # task = threading.Thread(target=data_logging_routine, daemon=True)
+    # task.start()
     atmino_device.start();
 
 def reload_routine(socketio, app):
@@ -69,11 +71,14 @@ def reload_routine(socketio, app):
 def data_logging_routine():
 
     last_output = atmino_device.last_output
+
+    if atmino_device.last_output != last_output:
+        print(last_output)
     
-    while True:
-        if atmino_device.last_output != last_output:
-            print("hello")
-        sleep(1)     
+    # while True:
+    #     if atmino_device.last_output != last_output:
+    #         print("hello")
+    #     sleep(1)     
 
 # API
 # @plugin_blueprint.route("/topics")
