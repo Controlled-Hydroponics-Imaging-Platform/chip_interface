@@ -1,0 +1,16 @@
+{
+        "database_path": {
+        "label": "data storage file",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "data/test2_dataset.db"
+    },
+    "active_experiment": {
+        "label": "Active Experiment",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "experiment_test_2"
+    }
+}

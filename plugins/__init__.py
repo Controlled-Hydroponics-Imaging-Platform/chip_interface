@@ -501,6 +501,9 @@ def load_all_plugins(app, socketio):
             if hasattr(module, 'plugin_blueprint'):
                 app.register_blueprint(module.plugin_blueprint)
                 print(f" * Registered plugin: {module_name}")
+            if hasattr(module, 'load_routine'):
+                module.load_routine(app)
+                print(f" * {module_name} routine started")
             if hasattr(module, 'register_serial_sockets'):
                 module.register_serial_sockets(SerialReader, socketio, app)
                 print(f" * {module_name} serial sockets started")
