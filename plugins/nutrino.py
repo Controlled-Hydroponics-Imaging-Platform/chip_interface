@@ -4,10 +4,15 @@ from flask_socketio import SocketIO
 import eventlet
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
+from lib.pi_data_storage_handler import database_handler as dh
+from influxdb_client_3 import InfluxDBClient3, Point
+
 
 # topic_list = []
 nutrino_device = None
 mqtt_bridge_alias = None
+data_handler = None
+last_seen_data = {}
 panel_association = "Nutrino"
 
 
@@ -28,7 +33,7 @@ def load_config(root_path, config_file):
 
 
 def register_mqtt_sockets(mqttBridge, socketio, app):
-    global mqtt_bridge_alias, nutrino_device
+    global mqtt_bridge_alias, nutrino_device, data_handler, last_seen_data
     mqtt_bridge_alias = mqttBridge
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
@@ -46,6 +51,19 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     
     nutrino_device.start();
 
+    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
+    data_handler.start(continuous_nutrino_logging,routine_name="continuous_nutrino_logging")
+    
+
+    ## initiate some values
+    # init_exp_data = {"experiment_id":"test1",
+    #                  "name":"test experiment",
+    #                  "crop":"pickles",
+    #                  "start_time":"now"}
+    
+    # data_handler.insert("experiments", init_exp_data)
+    last_seen_data = nutrino_device.last_output
+
 def reload_routine(socketio, app):
     global mqtt_bridge_alias,nutrino_device
 
@@ -53,10 +71,32 @@ def reload_routine(socketio, app):
     nutrino_device.kill()
     nutrino_device = None
 
+    # Kill datahandlers
+    data_handler.kill_all()
+    data_handler = None
+
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
  
+def continuous_nutrino_logging():
+    global nutrino_device, data_handler, last_seen_data
 
+    data_out = nutrino_device.last_output
+
+    if data_out != last_seen_data:
+        last_seen_data = data_out
+        # print(data_out)
+
+        sorted_data= {
+            "experiment_id":"test1",
+            "device_id": nutrino_device.device_name,
+            "sensor_type":"nutrient_reservoir",
+            "payload_json": json.dumps(data_out.get("data")),
+            "timestamp": data_out.get("timestamp_utc")        
+            }
+
+        data_handler.insert("sensor_continuous",sorted_data)
+  
 # API
 # @plugin_blueprint.route("/topics")
 # def get_topic():

@@ -1,6 +1,6 @@
 import os
 import importlib
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 from time import sleep
 import eventlet
 import threading
@@ -166,6 +166,8 @@ class mqttBridge:
 
     def _on_message(self, client, userdata, msg):
         try:
+            timestamp = datetime.now().astimezone()
+
             payload = msg.payload
             if self.decode == "utf8" or (self.decode == "auto" and self._looks_text(payload)):
                 try:
@@ -179,7 +181,8 @@ class mqttBridge:
                     print(f"[{self.device_name}] Payload decode failed: {e}")
             out = {
                 "data": payload,
-                "timestamp": datetime.now().strftime(strfmt),
+                "timestamp": timestamp.strftime(strfmt),
+                "timestamp_utc":timestamp.astimezone(timezone.utc).isoformat(),
                 "topic": msg.topic
             }
             self.last_output = out
@@ -447,9 +450,11 @@ class SerialReader:
                                     continue
 
                                 processed_data = self.process_raw_data(raw_data)
+                                timestamp = datetime.now().astimezone()
                                 output_data = {
                                     "data": processed_data,
-                                    "timestamp": datetime.now().strftime(strfmt)
+                                    "timestamp": timestamp.strftime(strfmt),
+                                    "timestamp_utc": timestamp.astimezone(timezone.utc).isoformat()
                                 }
                                 self.socketio.emit(f"{self.device_name}_sensor_update", output_data)
                                 self.last_output = output_data

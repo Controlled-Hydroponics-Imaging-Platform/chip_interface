@@ -7,13 +7,12 @@ from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
 from lib.pi_data_storage_handler import database_handler as dh
 from influxdb_client_3 import InfluxDBClient3, Point
-import threading
-
 
 # topic_list = []
 atmino_device = None
 mqtt_bridge_alias = None
 data_handler = None
+last_seen_data = {}
 panel_association = "Atmino"
 
 
@@ -34,7 +33,7 @@ def load_config(root_path, config_file):
 
 
 def register_mqtt_sockets(mqttBridge, socketio, app):
-    global mqtt_bridge_alias, atmino_device, data_handler
+    global mqtt_bridge_alias, atmino_device, data_handler, last_seen_data
     mqtt_bridge_alias = mqttBridge
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
@@ -49,36 +48,55 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
                                password=config["mqtt_pwd"]["set_to"], 
                                keepalive=60, 
                                reconnect_min=1, reconnect_max=30)
-    
-    
-    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
-    data_handler.start(data_logging_routine,routine_name="test")
-    
-    # task = threading.Thread(target=data_logging_routine, daemon=True)
-    # task.start()
+        
     atmino_device.start();
 
+    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
+    data_handler.start(continuous_atmino_logging,routine_name="continuous_atmino_logging")
+    
+
+    ## initiate some values
+    # init_exp_data = {"experiment_id":"test1",
+    #                  "name":"test experiment",
+    #                  "crop":"pickles",
+    #                  "start_time":"now"}
+    
+    # data_handler.insert("experiments", init_exp_data)
+    last_seen_data = atmino_device.last_output
+
 def reload_routine(socketio, app):
-    global mqtt_bridge_alias,atmino_device
+    global mqtt_bridge_alias,atmino_device, data_handler
 
     # Kill atmino devices
     atmino_device.kill()
     atmino_device = None
 
+    # Kill datahandlers
+    data_handler.kill_all()
+    data_handler = None
+
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
 
-def data_logging_routine():
+def continuous_atmino_logging():
+    global atmino_device, data_handler, last_seen_data
 
-    last_output = atmino_device.last_output
+    data_out = atmino_device.last_output
 
-    if atmino_device.last_output != last_output:
-        print(last_output)
+    if data_out != last_seen_data:
+        last_seen_data = data_out
+        # print(data_out)
+
+        sorted_data= {
+            "experiment_id":"test1",
+            "device_id": atmino_device.device_name,
+            "sensor_type":"envirionment",
+            "payload_json": json.dumps(data_out.get("data")),
+            "timestamp": data_out.get("timestamp_utc")        
+            }
+
+        data_handler.insert("sensor_continuous",sorted_data)
     
-    # while True:
-    #     if atmino_device.last_output != last_output:
-    #         print("hello")
-    #     sleep(1)     
 
 # API
 # @plugin_blueprint.route("/topics")
