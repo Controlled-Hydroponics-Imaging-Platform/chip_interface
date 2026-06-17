@@ -174,7 +174,7 @@
             "label": "height (px)",
             "type": "number",
             "value_type": "number",
-            "set_to": 800
+            "set_to": 1200
         },
         "config": {
             "label": "config file",

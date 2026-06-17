@@ -65,7 +65,7 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     last_seen_data = nutrino_device.last_output
 
 def reload_routine(socketio, app):
-    global mqtt_bridge_alias,nutrino_device
+    global mqtt_bridge_alias,nutrino_device, data_handler
 
     # Kill nutrino devices
     nutrino_device.kill()

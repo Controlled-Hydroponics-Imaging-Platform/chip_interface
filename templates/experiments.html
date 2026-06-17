@@ -1,0 +1,215 @@
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+
+    .card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .active {
+        border: 2px solid green;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 500px;
+    }
+
+    input,
+    textarea,
+    button {
+        padding: 8px;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+</style>
+
+<h2>Active Experiment</h2>
+<div id="activeExperiment">Loading...</div>
+
+<hr>
+
+<h2>Create New Experiment</h2>
+
+<form id="createExperimentForm">
+    <input type="text" name="experiment_id" placeholder="Experiment ID" required>
+    <input type="text" name="name" placeholder="Experiment Name" required>
+    <input type="text" name="crop" placeholder="Crop" required>
+
+    <label>Start Time</label>
+    <input type="datetime-local" name="start_time" required>
+
+    <textarea name="notes" rows="4" placeholder="Notes"></textarea>
+
+    <button type="submit">Create Experiment</button>
+</form>
+
+<p id="createStatus"></p>
+
+<hr>
+
+<h2>Select Active Experiment</h2>
+
+<select id="experimentDropdown">
+    <option value="">Loading...</option>
+</select>
+
+<button id="setActiveButton">Set Active</button>
+
+<div id="selectedExperimentDetails"></div>
+
+<script>
+let experiments = [];
+
+async function loadActiveExperiment() {
+    const response = await fetch("/experiments/get_active_experiment");
+    const data = await response.json();
+
+    const container = document.getElementById("activeExperiment");
+
+    if (!data.experiment) {
+        container.innerHTML = "<em>No active experiment selected.</em>";
+        return;
+    }
+
+    const exp = data.experiment;
+
+    container.innerHTML = `
+        <strong>${exp.name}</strong><br>
+        ID: ${exp.experiment_id}<br>
+        Crop: ${exp.crop}<br>
+        Start: ${exp.start_time}<br>
+        Notes: ${exp.notes || ""}
+    `;
+}
+
+async function loadExperiments() {
+    const response = await fetch("/experiments/get_all_experiments");
+    const data = await response.json();
+
+    experiments = data.experiments || [];
+
+    const dropdown = document.getElementById("experimentDropdown");
+
+    if (experiments.length === 0) {
+        dropdown.innerHTML = `<option value="">No experiments found</option>`;
+        return;
+    }
+
+    dropdown.innerHTML = experiments.map(exp => `
+        <option value="${exp.experiment_id}">
+            ${exp.name} — ${exp.crop} — ${exp.start_time}
+        </option>
+    `).join("");
+
+    showSelectedExperimentDetails();
+}
+
+function showSelectedExperimentDetails() {
+    const dropdown = document.getElementById("experimentDropdown");
+    const selectedId = dropdown.value;
+
+    const exp = experiments.find(e => e.experiment_id === selectedId);
+    const details = document.getElementById("selectedExperimentDetails");
+
+    if (!exp) {
+        details.innerHTML = "";
+        return;
+    }
+
+    details.innerHTML = `
+        <h3>Selected Experiment</h3>
+        <strong>${exp.name}</strong><br>
+        ID: ${exp.experiment_id}<br>
+        Crop: ${exp.crop}<br>
+        Start: ${exp.start_time}<br>
+        Notes: ${exp.notes || ""}
+    `;
+}
+
+async function setActiveExperiment(experimentId) {
+    const response = await fetch("/experiments/set_active_experiment", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            experiment_id: experimentId
+        })
+    });
+
+    const data = await response.json();
+
+    if (!data.ok) {
+        alert(data.error || "Failed to set active experiment");
+        return;
+    }
+
+    await loadActiveExperiment();
+}
+
+document.getElementById("experimentDropdown").addEventListener("change", () => {
+    showSelectedExperimentDetails();
+});
+
+document.getElementById("setActiveButton").addEventListener("click", async () => {
+    const experimentId = document.getElementById("experimentDropdown").value;
+
+    if (!experimentId) {
+        alert("Please select an experiment.");
+        return;
+    }
+
+    await setActiveExperiment(experimentId);
+});
+
+document.getElementById("createExperimentForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const form = new FormData(this);
+
+    const payload = {
+        experiment_id: form.get("experiment_id"),
+        name: form.get("name"),
+        crop: form.get("crop"),
+        start_time: form.get("start_time").replace("T", " ") + ":00",
+        notes: form.get("notes")
+    };
+
+    const response = await fetch("/experiments/create_new_experiment", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    const status = document.getElementById("createStatus");
+
+    if (!data.ok) {
+        status.innerText = data.error || "Failed to create experiment";
+        return;
+    }
+
+    status.innerText = `Created ${data.experiment_id}`;
+
+    this.reset();
+
+    await loadExperiments();
+    await loadActiveExperiment();
+});
+
+loadActiveExperiment();
+loadExperiments();
+</script>

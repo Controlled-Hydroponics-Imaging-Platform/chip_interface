@@ -1,5 +1,5 @@
 {
-        "database_path": {
+    "database_path": {
         "label": "data storage file",
         "type": "text",
         "value_type": "text",
@@ -11,6 +11,6 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "experiment_test_2"
+        "set_to": "anada one"
     }
 }
