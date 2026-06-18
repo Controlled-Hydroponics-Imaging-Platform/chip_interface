@@ -9,14 +9,13 @@ import requests
 from lib.motion_planner import gantry_planner as gp
 from lib.motion_planner import routine_coordinator
 from lib.pi_data_storage_handler import database_handler as dh
-from influxdb_client_3 import InfluxDBClient3, Point
-
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
                 url_prefix='/spatial')
 
 panel_association = "Spatial"
+experiment_panel_association = "Experiments" 
 
 scripts =["spatial.js"]
 
@@ -24,7 +23,9 @@ serial_reader_alias = None
 serial_device_list = {}
 linear_gantry_device_list = {}
 device_routine_coordinator_list= {}
-# data_handler_list = {}
+data_handler = None
+last_seen_data = {}
+active_experiment=None
 app_root_path = None
 data_base_path = "data/test_database.db"
 
@@ -142,6 +143,7 @@ def load_config(root_path, config_file):
 
 def register_serial_sockets(SerialReader, socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
+    global data_handler, active_experiment, last_seen_data
     global app_root_path
 
     serial_reader_alias = SerialReader
@@ -180,6 +182,20 @@ def register_serial_sockets(SerialReader, socketio, app):
             device_routine_coordinator.set_schedule(param["routine_schedule"])
             device_routine_coordinator_list[param["associated_serial_device"]]  = device_routine_coordinator
 
+    experiment_config_file = load_config(app.root_path, "panels.json")[experiment_panel_association]['config']['set_to']
+    experiment_config = load_config(app.root_path, experiment_config_file)
+    active_experiment = experiment_config["active_experiment"]["set_to"]
+
+    data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
+    data_handler.start(continuous_pose_logging,routine_name="continuous_nutrino_logging")
+    
+    for device_id, serial_device in serial_device_list.items():
+        
+        data_out = serial_device.last_output
+        data_out["pose_data"] = linear_gantry_device_list[device_id].get_current_pose()
+        data_out["schedule_data"] = device_routine_coordinator_list[device_id].get_output()
+
+        last_seen_data[device_id] = data_out
 
 def register_socket_handlers(socketio):
     ## Socket activates and deactivates the routine schedulers
@@ -264,7 +280,7 @@ def register_socket_handlers(socketio):
 
 def reload_routine(socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list
-
+    global data_handler
     # Kill serial devices
     for device in serial_device_list.values():
         device.kill()
@@ -277,22 +293,53 @@ def reload_routine(socketio, app):
 
     linear_gantry_device_list.clear()
 
+    # Kill datahandlers
+    data_handler.kill_all()
+    data_handler = None
+
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)
 
-# def data_logging_routine(influx_db_client):
-#     global serial_device_list, serial_reader_alias, linear_gantry_device_list
+def continuous_pose_logging():
+    global serial_device_list, linear_gantry_device_list,device_routine_coordinator_list
+    global data_handler, last_seen_data, active_experiment
 
-#     # client = InfluxDBClient3(host=host, token=token, org=org)
+    for device_id, serial_device in serial_device_list.items():
+        data_out = serial_device.last_output
+        data_out["pose_data"] = linear_gantry_device_list[device_id].get_current_pose()
+        data_out["schedule_data"] = device_routine_coordinator_list[device_id].get_output()
 
-#     # token = os.environ.get("INFLUXDB_TOKEN")
-#     # org = "CHIP PRD"
-#     # host = "https://us-east-1-1.aws.cloud2.influxdata.com"
+        if data_out != last_seen_data[device_id]:
+            last_seen_data[device_id] = data_out
+            # print(data_out)
 
-#     # client = InfluxDBClient3(host=host, token=token, org=org)
+            sorted_data= {
+                "device_id": device_id,
+                "experiment_id": active_experiment,
+                "x_mm":data_out["pose_data"].get("x"),
+                "y_mm":data_out["pose_data"].get("y"),
+                "z_mm":data_out["pose_data"].get("z"),
+                "raw_joints_json": json.dumps(data_out.get("data")),
+                "pose_is_stale" : 1 if data_out["pose_data"].get("pose_is_stale") else 0,
+                "standby_mode" : 1 if data_out["pose_data"].get("standby_mode") else 0,
+                "timestamp": data_out.get("timestamp_utc")        
+                }
 
-#     spatial_db = dh.SQLiteDataHandler(data_base_path, dh.POSE_TABLE)
+            data_handler.insert("pose_continuous",sorted_data)
 
+# POSE_TABLE_CONTENT = """
+#     pose_id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     device_id TEXT NOT NULL,
+#     experiment_id TEXT NOT NULL,
+#     x_mm REAL NOT NULL,
+#     y_mm REAL NOT NULL,
+#     z_mm REAL NOT NULL,
+#     raw_joints_json TEXT NOT NULL,
+#     pose_is_stale INTEGER DEFAULT 0,
+#     note TEXT,
+#     timestamp TEXT NOT NULL,
+#     FOREIGN KEY(experiment_id) REFERENCES experiments(experiment_id)
+# """
 
 ###### API: /spatial/...
 

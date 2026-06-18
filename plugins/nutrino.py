@@ -5,7 +5,6 @@ import eventlet
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 from lib.pi_data_storage_handler import database_handler as dh
-from influxdb_client_3 import InfluxDBClient3, Point
 
 
 # topic_list = []
