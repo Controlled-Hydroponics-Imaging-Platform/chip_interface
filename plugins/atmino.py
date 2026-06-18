@@ -60,14 +60,6 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
     data_handler.start(continuous_atmino_logging,routine_name="continuous_atmino_logging")
     
-
-    ## initiate some values
-    # init_exp_data = {"experiment_id":"test1",
-    #                  "name":"test experiment",
-    #                  "crop":"pickles",
-    #                  "start_time":"now"}
-    
-    # data_handler.insert("experiments", init_exp_data)
     last_seen_data = atmino_device.last_output
 
 def reload_routine(socketio, app):
