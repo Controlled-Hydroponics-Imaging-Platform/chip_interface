@@ -143,6 +143,8 @@ def set_active_experiment():
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
 
+    current_app.reload_all_plugins()
+
     return jsonify({
         "ok": True,
         "active_experiment": active_experiment

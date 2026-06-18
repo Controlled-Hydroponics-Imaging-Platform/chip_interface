@@ -15,8 +15,10 @@ app = Flask(__name__)
 app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://localhost:5000/')
 app.secret_key = "supersecretkey" 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+app.reload_all_plugins = lambda: reload_plugins(app, socketio)
 
 script_list = load_all_plugins(app,socketio)
+
 
 
 def load_config(config_file):
@@ -121,6 +123,17 @@ def home():
         
 
     return render_template("index.html",panels=enabled_panels, config_params = config_params)
+
+@app.route("/reload_plugins")
+def reload_app_plugins():
+    try:
+        reload_plugins(app,socketio)
+        print(f" app plugins successfully reloaded!")
+        flash(f" app plugins successfully reloaded!", "success")
+    except Exception as e:
+        print(f"Failed to reload plugins: {e}")
+        flash(f"Failed to reload plugins: {e}", "Failed")
+    return redirect(url_for("home"))
 
 
 @app.route("/settings", methods=["GET", "POST"])

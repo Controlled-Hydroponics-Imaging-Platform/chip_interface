@@ -13,7 +13,9 @@ nutrino_device = None
 mqtt_bridge_alias = None
 data_handler = None
 last_seen_data = {}
+active_experiment=None
 panel_association = "Nutrino"
+experiment_panel_association = "Experiments" 
 
 
 plugin_blueprint = Blueprint('nutrino',
@@ -33,7 +35,7 @@ def load_config(root_path, config_file):
 
 
 def register_mqtt_sockets(mqttBridge, socketio, app):
-    global mqtt_bridge_alias, nutrino_device, data_handler, last_seen_data
+    global mqtt_bridge_alias, nutrino_device, data_handler, last_seen_data, active_experiment
     mqtt_bridge_alias = mqttBridge
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
@@ -50,18 +52,14 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
                                reconnect_min=1, reconnect_max=30)
     
     nutrino_device.start();
+    
+    experiment_config_file = load_config(app.root_path, "panels.json")[experiment_panel_association]['config']['set_to']
+    experiment_config = load_config(app.root_path, experiment_config_file)
+    active_experiment = experiment_config["active_experiment"]["set_to"]
 
-    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.SENSORS_TABLE)
+    data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
     data_handler.start(continuous_nutrino_logging,routine_name="continuous_nutrino_logging")
     
-
-    ## initiate some values
-    # init_exp_data = {"experiment_id":"test1",
-    #                  "name":"test experiment",
-    #                  "crop":"pickles",
-    #                  "start_time":"now"}
-    
-    # data_handler.insert("experiments", init_exp_data)
     last_seen_data = nutrino_device.last_output
 
 def reload_routine(socketio, app):
@@ -79,7 +77,7 @@ def reload_routine(socketio, app):
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
  
 def continuous_nutrino_logging():
-    global nutrino_device, data_handler, last_seen_data
+    global nutrino_device, data_handler, last_seen_data, active_experiment
 
     data_out = nutrino_device.last_output
 
@@ -88,7 +86,7 @@ def continuous_nutrino_logging():
         # print(data_out)
 
         sorted_data= {
-            "experiment_id":"test1",
+            "experiment_id": active_experiment,
             "device_id": nutrino_device.device_name,
             "sensor_type":"nutrient_reservoir",
             "payload_json": json.dumps(data_out.get("data")),

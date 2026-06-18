@@ -4,13 +4,13 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "data/test2_dataset.db"
+        "set_to": "data/test3_dataset.db"
     },
     "active_experiment": {
         "label": "Active Experiment",
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "anada one"
+        "set_to": "test2"
     }
 }
