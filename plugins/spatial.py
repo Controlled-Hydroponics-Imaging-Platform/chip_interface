@@ -187,7 +187,7 @@ def register_serial_sockets(SerialReader, socketio, app):
     active_experiment = experiment_config["active_experiment"]["set_to"]
 
     data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
-    data_handler.start(continuous_pose_logging,routine_name="continuous_nutrino_logging")
+    data_handler.start(continuous_pose_logging,routine_name="continuous_pose_logging")
     
     for device_id, serial_device in serial_device_list.items():
         
