@@ -6,6 +6,7 @@ from datetime import datetime
 from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
 from lib.pi_data_storage_handler import database_handler as dh
+from lib.data_aggregator.capture_registry import capture_registry
 
 # topic_list = []
 atmino_device = None
@@ -57,8 +58,9 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     experiment_config = load_config(app.root_path, experiment_config_file)
     active_experiment = experiment_config["active_experiment"]["set_to"]
 
-    data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
-    data_handler.start(continuous_atmino_logging,routine_name="continuous_atmino_logging")
+    if experiment_config["data_logging"]["set_to"]:
+        data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
+        data_handler.start(continuous_atmino_logging,routine_name="continuous_atmino_logging")
     
     last_seen_data = atmino_device.last_output
 
@@ -70,8 +72,9 @@ def reload_routine(socketio, app):
     atmino_device = None
 
     # Kill datahandlers
-    data_handler.kill_all()
-    data_handler = None
+    if data_handler:
+        data_handler.kill_all()
+        data_handler = None
 
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)

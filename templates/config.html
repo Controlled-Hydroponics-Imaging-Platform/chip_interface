@@ -72,7 +72,10 @@
                 <div>
                     <input type="text" name="{{ key }}" id="{{ key }}" value="{{ setting["set_to"] }}">
                 </div>
-
+            {% elif setting["type"] == "checkbox" %}
+                <div>
+                    <input type="checkbox" name="{{ key }}" id="{{ key }}" {% if setting["set_to"] %}checked{% endif %}>
+                </div>
             {% elif setting["type"] == "linear_gantry_config" %}
                 <div class="linear-gantry-group">
                     <!-- <span>associated serial Device: </span><input type="number" name="{{ key }}_extent_cm" id="{{ key }}_extent_cm" value="{{ setting["extent_cm"] }}"> -->

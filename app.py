@@ -202,6 +202,8 @@ def configure(panel):
 
                 if params["value_type"] == "number":
                     new_config[key]["set_to"] = int(user_input)
+                elif params["value_type"] == "boolean":
+                    new_config[key]["set_to"] = bool(user_input) 
                 else:
                     new_config[key]["set_to"] = user_input
 

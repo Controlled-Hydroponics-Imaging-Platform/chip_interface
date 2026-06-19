@@ -56,8 +56,9 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
     experiment_config = load_config(app.root_path, experiment_config_file)
     active_experiment = experiment_config["active_experiment"]["set_to"]
 
-    data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
-    data_handler.start(continuous_nutrino_logging,routine_name="continuous_nutrino_logging")
+    if experiment_config["data_logging"]["set_to"]:
+        data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.SENSORS_TABLE)
+        data_handler.start(continuous_nutrino_logging,routine_name="continuous_nutrino_logging")
     
     last_seen_data = nutrino_device.last_output
 
@@ -69,8 +70,9 @@ def reload_routine(socketio, app):
     nutrino_device = None
 
     # Kill datahandlers
-    data_handler.kill_all()
-    data_handler = None
+    if data_handler:
+        data_handler.kill_all()
+        data_handler = None
 
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)

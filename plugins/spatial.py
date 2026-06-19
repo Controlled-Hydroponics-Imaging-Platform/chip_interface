@@ -186,9 +186,10 @@ def register_serial_sockets(SerialReader, socketio, app):
     experiment_config = load_config(app.root_path, experiment_config_file)
     active_experiment = experiment_config["active_experiment"]["set_to"]
 
-    data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
-    data_handler.start(continuous_pose_logging,routine_name="continuous_pose_logging")
-    
+    if experiment_config["data_logging"]["set_to"]:
+        data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
+        data_handler.start(continuous_pose_logging,routine_name="continuous_pose_logging")
+        
     for device_id, serial_device in serial_device_list.items():
         
         data_out = serial_device.last_output
@@ -294,8 +295,9 @@ def reload_routine(socketio, app):
     linear_gantry_device_list.clear()
 
     # Kill datahandlers
-    data_handler.kill_all()
-    data_handler = None
+    if data_handler:
+        data_handler.kill_all()
+        data_handler = None
 
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)

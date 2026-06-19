@@ -12,5 +12,11 @@
         "value_type": "text",
         "values": [],
         "set_to": "anada one"
+    },
+    "data_logging": {
+        "label": "Enable data logging",
+        "type": "checkbox",
+        "value_type": "boolean",
+        "set_to": false
     }
 }
