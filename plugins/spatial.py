@@ -25,7 +25,6 @@ data_handler = None
 last_seen_data = {}
 active_experiment=None
 app_root_path = None
-# data_base_path = "data/test_database.db"
 image_storage_path = None
 
 ###### Callbacks background and threaded processes: Serial proceses_driver_data, Routine scheduler gantry planner and data proc action callback(linear_gantry_routine_callback) 
