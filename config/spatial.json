@@ -14,7 +14,7 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "http://campi.local:5000"
+        "set_to": "http://192.168.51.241:5000"
     },
     "motor_driver_motion_config": {
         "label": "motion_platform configuration",

@@ -16,7 +16,7 @@ class CaptureRegistry:
             except Exception as e:
                 output[name] = {"error": str(e)}
 
-        return output, uuid.uuid4()
+        return output, uuid.uuid4().hex
     def deregister(self, name):
         return self.providers.pop(name, None)
     

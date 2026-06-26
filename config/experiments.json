@@ -6,6 +6,13 @@
         "values": [],
         "set_to": "data/test3_dataset.db"
     },
+    "image_storage_path": {
+        "label": "Image Storage Directory",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "data/images"
+    },
     "active_experiment": {
         "label": "Active Experiment",
         "type": "text",

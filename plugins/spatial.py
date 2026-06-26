@@ -3,12 +3,13 @@ from flask_socketio import SocketIO
 import eventlet
 import serial
 import os, json, re, time
-from datetime import datetime
+from datetime import datetime, timezone
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
 from lib.motion_planner import gantry_planner as gp
 from lib.motion_planner import routine_coordinator
 from lib.pi_data_storage_handler import database_handler as dh
+from lib.pi_data_storage_handler.image_data_handler import request_frame
 from lib.data_aggregator.capture_registry import capture_registry
 
 plugin_blueprint = Blueprint('spatial',
@@ -24,11 +25,13 @@ serial_reader_alias = None
 serial_device_list = {}
 linear_gantry_device_list = {}
 device_routine_coordinator_list= {}
+camera_server = None
 data_handler = None
 last_seen_data = {}
 active_experiment=None
 app_root_path = None
-data_base_path = "data/test_database.db"
+# data_base_path = "data/test_database.db"
+image_storage_path = None
 
 ###### Callbacks background and threaded processes: Serial proceses_driver_data, Routine scheduler gantry planner and data proc action callback(linear_gantry_routine_callback) 
 
@@ -144,8 +147,8 @@ def load_config(root_path, config_file):
 
 def register_serial_sockets(SerialReader, socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
-    global data_handler, active_experiment, last_seen_data
-    global app_root_path
+    global camera_server, data_handler, active_experiment, last_seen_data
+    global app_root_path, image_storage_path
 
     serial_reader_alias = SerialReader
     app_root_path = app.root_path
@@ -182,10 +185,15 @@ def register_serial_sockets(SerialReader, socketio, app):
             device_routine_coordinator = routine_coordinator.RoutineHandler(lambda: linear_gantry_routine_callback(param["associated_serial_device"]),associated_device_name= param["associated_serial_device"])
             device_routine_coordinator.set_schedule(param["routine_schedule"])
             device_routine_coordinator_list[param["associated_serial_device"]]  = device_routine_coordinator
+        elif key == "camera_server":
+            camera_server = param["set_to"]
+            capture_registry.register(f"camera_server_data:{camera_server}", capture_image_data)
+            print(f"Camera server listening on: {camera_server}")
 
     experiment_config_file = load_config(app.root_path, "panels.json")[experiment_panel_association]['config']['set_to']
     experiment_config = load_config(app.root_path, experiment_config_file)
     active_experiment = experiment_config["active_experiment"]["set_to"]
+    image_storage_path = experiment_config["image_storage_path"]["set_to"]
 
     if experiment_config["data_logging"]["set_to"]:
         data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
@@ -291,6 +299,7 @@ def reload_routine(socketio, app):
     # Kill serial devices
     for device_id, device in serial_device_list.items():
         device.kill()
+        #deregister pose callbacks
         capture_registry.deregister(f"{device_id}_data")
 
     serial_device_list.clear()
@@ -302,6 +311,9 @@ def reload_routine(socketio, app):
 
     linear_gantry_device_list.clear()
 
+    #deregister image collection callbacks
+    capture_registry.deregister(f"camera_server_data:{camera_server}")
+
     # Kill datahandlers
     if data_handler:
         data_handler.kill_all()
@@ -310,6 +322,7 @@ def reload_routine(socketio, app):
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)
 
+## Data logging and data aquisition callbacks
 def continuous_pose_logging():
     global serial_device_list, linear_gantry_device_list,device_routine_coordinator_list
     global data_handler, last_seen_data, active_experiment
@@ -358,10 +371,50 @@ def capture_pose_data(device_id):
                 "standby_mode" : 1 if data_out["pose_data"].get("standby_mode") else 0,
                 "timestamp": data_out.get("timestamp_utc")        
                 }
+        
+    return sorted_data
+
+def capture_image_data():
+    global image_storage_path, camera_server
+
+    camera_config = requests.get(f"{camera_server}/current_config", timeout=10)
+    camera_config.raise_for_status()
+    camera_config = camera_config.json()
+
+    device = camera_config.get("device")
+    device_id = camera_config.get("device_id")
+    device_id = f"{device_id}_{device}"
+    image_type = camera_config.get("selected_stream")
+
+    image_info=request_frame(f"{camera_server}/lossless_frame", image_storage_path)
     
-    # print(sorted_data)
+    sorted_data = { "data_table": "image_events",
+                    "image_id": image_info.get("image_id"),
+                    "camera_id":device_id,
+                    "timestamp":image_info.get("timestamp_utc"),
+                    "file_name": image_info.get("file_name"),
+                    "image_type": image_type,
+                    "size_bytes": image_info.get("size_bytes")
+                }
     
     return sorted_data
+
+
+# IMAGE_CAPTURE_TABLE_CONTENT ="""
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     capture_id TEXT NOT NULL,
+#     image_id TEXT NOT NULL,
+#     camera_id TEXT NOT NULL,
+#     file_name TEXT NOT NULL,
+#     image_type TEXT,
+#     width INTEGER,
+#     height INTEGER,
+#     size_bytes INTEGER,
+
+#     FOREIGN KEY(capture_id) REFERENCES capture_events(capture_id)
+
+# """
+
 
 # POSE_TABLE_CONTENT = """
 #     pose_id INTEGER PRIMARY KEY AUTOINCREMENT,
