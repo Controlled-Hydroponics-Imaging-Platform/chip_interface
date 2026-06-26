@@ -1,10 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for, current_app, abort, flash
-from flask_socketio import SocketIO
-import eventlet
-import serial
 import os, json, re, time
-from datetime import datetime, timezone
-strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
 from lib.motion_planner import gantry_planner as gp
 from lib.motion_planner import routine_coordinator
@@ -399,37 +394,6 @@ def capture_image_data():
     
     return sorted_data
 
-
-# IMAGE_CAPTURE_TABLE_CONTENT ="""
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     capture_id TEXT NOT NULL,
-#     image_id TEXT NOT NULL,
-#     camera_id TEXT NOT NULL,
-#     file_name TEXT NOT NULL,
-#     image_type TEXT,
-#     width INTEGER,
-#     height INTEGER,
-#     size_bytes INTEGER,
-
-#     FOREIGN KEY(capture_id) REFERENCES capture_events(capture_id)
-
-# """
-
-
-# POSE_TABLE_CONTENT = """
-#     pose_id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     device_id TEXT NOT NULL,
-#     experiment_id TEXT NOT NULL,
-#     x_mm REAL NOT NULL,
-#     y_mm REAL NOT NULL,
-#     z_mm REAL NOT NULL,
-#     raw_joints_json TEXT NOT NULL,
-#     pose_is_stale INTEGER DEFAULT 0,
-#     note TEXT,
-#     timestamp TEXT NOT NULL,
-#     FOREIGN KEY(experiment_id) REFERENCES experiments(experiment_id)
-# """
-
 ###### API: /spatial/...
 
 @plugin_blueprint.route("/serial_devices")
@@ -490,9 +454,7 @@ def motion_routine(device):
             json.dump(config_params, file, indent=4)
         
         ## Note: may potentially need to include reload plugin routine, pending testing
-        # reload_plugins(app,socketio)
-        ## reload motion_routine
-        # linear_gantry_device_list[device].kill()
+        # current_app.reload_all_plugins()
         linear_gantry_device_list[device].load_motion_routine(config_params[motion_param]["motion_routine"])
 
         flash(f"{device} motion routine update in {config_file}", "success")
@@ -541,8 +503,7 @@ def routine_schedule(device):
             json.dump(config_params, file, indent=4)
         
         ## Note: may potentially need to include reload plugin routine, pending testing
-        # reload_plugins(app,socketio)
-        ## reload schedule
+        # current_app.reload_all_plugins()
         device_routine_coordinator_list[device].set_schedule(config_params[schedule_param]["routine_schedule"])
 
         flash(f"{device} motion routine update in {config_file}", "success")
