@@ -1,3 +1,5 @@
+import uuid
+
 class CaptureRegistry:
     def __init__(self):
         self.providers = {}
@@ -14,6 +16,8 @@ class CaptureRegistry:
             except Exception as e:
                 output[name] = {"error": str(e)}
 
-        return output
+        return output, uuid.uuid4()
+    def deregister(self, name):
+        return self.providers.pop(name, None)
     
 capture_registry = CaptureRegistry()

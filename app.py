@@ -9,6 +9,7 @@ import os,sys
 import subprocess
 from plugins import load_all_plugins, reload_plugins
 from datetime import datetime
+from lib.data_aggregator.capture_registry import capture_registry
 strfmt= "%Y-%m-%d %H:%M:%S"
 
 app = Flask(__name__)
@@ -110,6 +111,25 @@ def get_serial_ports():
 @app.route("/plugin_scripts")
 def get_plugin_scripts():
     return jsonify(script_list)  # Return JSON response
+
+@app.route("/collect_data")
+def collect_data():
+    data,capture_id=capture_registry.collect()
+
+    data["capture_id"] = capture_id
+
+    return jsonify(data)  # Return JSON response
+
+# SENSOR_CAPTURE_TABLE_CONTENT = """
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     capture_id TEXT NOT NULL,
+#     device_id TEXT NOT NULL,
+#     sensor_type TEXT NOT NULL,
+#     payload_json TEXT NOT NULL,
+
+#     FOREIGN KEY(capture_id) REFERENCES capture_events(capture_id)
+# """
+
 
 # Web interface Routing
 

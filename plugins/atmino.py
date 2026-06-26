@@ -16,6 +16,7 @@ last_seen_data = {}
 active_experiment=None
 panel_association = "Atmino"
 experiment_panel_association = "Experiments" 
+capture_name = "atmino_data"
 
 
 plugin_blueprint = Blueprint('atmino',
@@ -51,7 +52,8 @@ def register_mqtt_sockets(mqttBridge, socketio, app):
                                keepalive=60, 
                                reconnect_min=1, reconnect_max=30)
         
-    atmino_device.start();
+    atmino_device.start()
+    capture_registry.register(name=capture_name, callback= capture_atmino_data)
 
 
     experiment_config_file = load_config(app.root_path, "panels.json")[experiment_panel_association]['config']['set_to']
@@ -76,6 +78,9 @@ def reload_routine(socketio, app):
         data_handler.kill_all()
         data_handler = None
 
+    #de-register callback from capture_register
+    capture_registry.deregister(capture_name)
+
     # Re-register
     register_mqtt_sockets(mqtt_bridge_alias, socketio, app)
 
@@ -98,6 +103,31 @@ def continuous_atmino_logging():
 
         data_handler.insert("sensor_continuous",sorted_data)
     
+def capture_atmino_data():
+    global atmino_device, data_handler, active_experiment
+
+    data_out = atmino_device.last_output
+
+    sorted_data= {
+            "data_table": "sensor_events",
+            "experiment_id": active_experiment,
+            "device_id": atmino_device.device_name,
+            "sensor_type":"envirionment",
+            "payload_json": data_out.get("data"),
+            "timestamp": data_out.get("timestamp_utc")        
+            }
+    
+    return sorted_data
+
+# SENSOR_CAPTURE_TABLE_CONTENT = """
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     capture_id TEXT NOT NULL,
+#     device_id TEXT NOT NULL,
+#     sensor_type TEXT NOT NULL,
+#     payload_json TEXT NOT NULL,
+
+#     FOREIGN KEY(capture_id) REFERENCES capture_events(capture_id)
+# """
 
 # API
 # @plugin_blueprint.route("/topics")

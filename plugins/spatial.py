@@ -9,6 +9,7 @@ import requests
 from lib.motion_planner import gantry_planner as gp
 from lib.motion_planner import routine_coordinator
 from lib.pi_data_storage_handler import database_handler as dh
+from lib.data_aggregator.capture_registry import capture_registry
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
@@ -191,7 +192,10 @@ def register_serial_sockets(SerialReader, socketio, app):
         data_handler.start(continuous_pose_logging,routine_name="continuous_pose_logging")
         
     for device_id, serial_device in serial_device_list.items():
-        
+
+        #register dataoutput callback to capture_registry
+        capture_registry.register(f"{device_id}_data", lambda: capture_pose_data(device_id))
+
         data_out = serial_device.last_output
         data_out["pose_data"] = linear_gantry_device_list[device_id].get_current_pose()
         data_out["schedule_data"] = device_routine_coordinator_list[device_id].get_output()
@@ -282,9 +286,13 @@ def register_socket_handlers(socketio):
 def reload_routine(socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list
     global data_handler
+
+    #de-register callback from capture_register
     # Kill serial devices
-    for device in serial_device_list.values():
+    for device_id, device in serial_device_list.items():
         device.kill()
+        capture_registry.deregister(f"{device_id}_data")
+
     serial_device_list.clear()
     
     # Kill any running routine devices
@@ -328,6 +336,32 @@ def continuous_pose_logging():
                 }
 
             data_handler.insert("pose_continuous",sorted_data)
+
+def capture_pose_data(device_id):
+    global serial_device_list, linear_gantry_device_list,device_routine_coordinator_list
+    global active_experiment
+
+    serial_device = serial_device_list[device_id]
+    data_out = serial_device.last_output
+    data_out["pose_data"] = linear_gantry_device_list[device_id].get_current_pose()
+    data_out["schedule_data"] = device_routine_coordinator_list[device_id].get_output()
+
+    sorted_data= {
+                "data_table": "pose_events",
+                "device_id": device_id,
+                "experiment_id": active_experiment,
+                "x_mm":data_out["pose_data"].get("x"),
+                "y_mm":data_out["pose_data"].get("y"),
+                "z_mm":data_out["pose_data"].get("z"),
+                "raw_joints_json": data_out.get("data"),
+                "pose_is_stale" : 1 if data_out["pose_data"].get("pose_is_stale") else 0,
+                "standby_mode" : 1 if data_out["pose_data"].get("standby_mode") else 0,
+                "timestamp": data_out.get("timestamp_utc")        
+                }
+    
+    # print(sorted_data)
+    
+    return sorted_data
 
 # POSE_TABLE_CONTENT = """
 #     pose_id INTEGER PRIMARY KEY AUTOINCREMENT,
