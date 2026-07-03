@@ -213,9 +213,9 @@ def register_serial_sockets(SerialReader, socketio, app):
         capture_registry.register(f"{device_id}_data", lambda: capture_pose_data(device_id))
 
         #set the device in standbymode as a safe gaurd
-        out = linear_gantry_device_list[device_id].standby(False)
+        out = linear_gantry_device_list[device_id].standby(True)
         if out:
-            serial_device.write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+            serial_device_list[device_id].write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
 
         time.sleep(1)
         
