@@ -308,7 +308,7 @@ def register_socket_handlers(socketio):
 
 
 def reload_routine(socketio, app):
-    global serial_device_list, serial_reader_alias, linear_gantry_device_list
+    global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
     global data_handler
 
     #de-register callback from capture_register
