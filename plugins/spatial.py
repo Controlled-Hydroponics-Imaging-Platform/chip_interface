@@ -78,7 +78,7 @@ def process_driver_data(raw_serial_output):
 def linear_gantry_routine_callback(device):
     """
     Callback for routine scheduler
-    Workflow: standby off > calibrate > while data and motion routine >  standby on
+    Workflow: standby off > calibrate > while data and motion routine > Return Home>  standby on
     """
     ## Standby off
     print(f"{device} action routine triggered")
@@ -114,7 +114,21 @@ def linear_gantry_routine_callback(device):
         print(f"{device}: current pose{linear_gantry_device_list[device].get_current_pose()}")
 
         #### This is where the data protocol goes
+
+
+    ## Return Home
+    out = linear_gantry_device_list[device].home()
     
+    if out:
+        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        time.sleep(0.01)
+        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+    print(f"{device}: Returning Home")
+    
+    time.sleep(out["t_s"]*2)
+    print(f"{device}: Device is home")
+
+
     print(f"Finished Routine entering standby")
 
     ## Standby On
@@ -198,11 +212,19 @@ def register_serial_sockets(SerialReader, socketio, app):
         #register dataoutput callback to capture_registry
         capture_registry.register(f"{device_id}_data", lambda: capture_pose_data(device_id))
 
+        #set the device in standbymode as a safe gaurd
+        out = linear_gantry_device_list[device_id].standby(False)
+        if out:
+            serial_device.write(f"standby x,{out['config']['x']} y,{out['config']['y']} z,{out['config']['z']}")
+
+        time.sleep(1)
+        
+        #get the last output from serial device
         data_out = serial_device.last_output
         data_out["pose_data"] = linear_gantry_device_list[device_id].get_current_pose()
         data_out["schedule_data"] = device_routine_coordinator_list[device_id].get_output()
 
-        last_seen_data[device_id] = data_out
+        last_seen_data[device_id] = data_out        
 
 def register_socket_handlers(socketio):
     ## Socket activates and deactivates the routine schedulers
