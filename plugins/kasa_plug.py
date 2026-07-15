@@ -24,7 +24,6 @@ def run_async(async_func, *args):
 # API Endpoint to get all Kasa devices
 @plugin_blueprint.route("/get_kasa_devices")
 def get_kasa_devices():
-    # devices = run_async(discover_kasa_devices())
     devices = run_async(discover_kasa_devices)
 
     return jsonify(devices)
@@ -52,10 +51,8 @@ def set_plug():
     # Convert '1'/'0', 'true'/'false', etc. to boolean
     state = str(state).lower() in ("1", "true", "on")
 
-    # result = run_async(set_kasa_plug(ip, state))
     result = run_async(set_kasa_plug, ip, state)
 
-    
     return jsonify({"message": result})
 
 async def set_kasa_plug(ip, state):
@@ -86,7 +83,6 @@ def toggle_plug():
         }), 400
 
     try:
-        # result = run_async(toggle_kasa_plug(ip))
         result = run_async(toggle_kasa_plug, ip)
 
         return jsonify({
@@ -131,7 +127,6 @@ def get_plug_status():
         }), 400
 
     try:
-        # state = run_async(get_kasa_plug_state(ip))
         state = run_async(get_kasa_plug_state, ip)
 
         return jsonify({
