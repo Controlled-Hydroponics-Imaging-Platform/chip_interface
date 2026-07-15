@@ -1,7 +1,4 @@
 from flask import Blueprint, jsonify, request, url_for, current_app
-from flask_socketio import SocketIO
-import eventlet
-import serial
 import os, json
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
@@ -13,7 +10,7 @@ plugin_blueprint = Blueprint('platform_control',
 
 panel_association = "Platform_Control"
 
-scripts =["nds.js"]
+scripts =["platform_control.js"]
 
 host_url=None
 control_schedule_list = {}

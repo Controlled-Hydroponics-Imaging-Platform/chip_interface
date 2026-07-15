@@ -1,8 +1,8 @@
 window.pluginRegistry = window.pluginRegistry || [];
 window.pluginRegistry.push({
-    name: "nds_sensors",
+    name: "platform_control",
     init: function () {
-        console.log("✅ Initializing NDS Sensor Plugin");
+        console.log("✅ Initializing Platform Control Plugin");
 
         // ✅ KASA Control Update Socket Handling
         const controlButtons = document.querySelectorAll(".kasa-toggle-plug");
@@ -166,77 +166,5 @@ window.pluginRegistry.push({
             return nextEvent;
         }
 
-        // ✅ Serial sensor handling
-        const sensorDivs = document.querySelectorAll("[id$='_sensors']");
-        sensorDivs.forEach(sensorDiv => {
-            const deviceName = sensorDiv.id.replace('_sensors', '');
-            const statusElem = document.querySelector(`#${deviceName}_status`) || createStatusElement(deviceName);
-
-            let reconnectInterval = null;
-            function startReconnectCountdown(seconds) {
-                let count = seconds;
-                reconnectInterval = setInterval(() => {
-                    count -= 1;
-                    const countdownElem = statusElem.querySelector('#countdown');
-                    if (countdownElem) countdownElem.textContent = count;
-                    if (count <= 0) clearInterval(reconnectInterval);
-                }, 1000);
-            }
-
-            function stopReconnectCountdown() {
-                if (reconnectInterval) {
-                    clearInterval(reconnectInterval);
-                    reconnectInterval = null;
-                }
-            }
-
-            socket.on(`${deviceName}_status_update`, function (data) {
-                const portInfo = data.device ? ` (${data.device})` : "";
-                if (data.status === "disconnected") {
-                    statusElem.classList.remove('connected');
-                    statusElem.classList.add('disconnected');
-                    statusElem.innerHTML = `* Device disconnected${portInfo}: Reconnecting in <span id='countdown'>5</span> sec...`;
-                    sensorDiv.innerHTML = `⚠️ Disconnected ${portInfo}`;
-                    startReconnectCountdown(5);
-                } else if (data.status === "connecting") {
-                    stopReconnectCountdown();
-                    statusElem.classList.remove('connected', 'disconnected');
-                    statusElem.innerHTML = `* Connecting to device${portInfo}...`;
-                    sensorDiv.innerHTML = `Waiting for response from${portInfo}...`;
-                } else if (data.status === "connected") {
-                    stopReconnectCountdown();
-                    statusElem.classList.remove('disconnected');
-                    statusElem.classList.add('connected');
-                    statusElem.innerHTML = `* Device Connected${portInfo}`;
-                    setTimeout(() => {
-                        statusElem.innerText = "";
-                        statusElem.classList.remove('connected', 'disconnected');
-                    }, 10000);
-                }
-            });
-
-            socket.on(`${deviceName}_sensor_update`, function (data) {
-                console.log(`📡 [${deviceName}] Received Data:`, data);
-                sensorDiv.innerHTML = "";
-                for (const [key, item] of Object.entries(data.data)) {
-                    const line = document.createElement('div');
-                    line.classList.add('sensor-item');
-                    line.innerHTML = `<strong>${key}</strong>: ${item.value} ${item.unit}`;
-                    sensorDiv.appendChild(line);
-                }
-                const ts = document.createElement('div');
-                ts.classList.add('timestamp');
-                ts.innerHTML = `<strong>Last updated</strong>: ${data.timestamp}`;
-                sensorDiv.appendChild(ts);
-            });
-
-            function createStatusElement(deviceName) {
-                const statusEl = document.createElement('div');
-                statusEl.id = `${deviceName}_status`;
-                statusEl.classList.add('connection_status');
-                sensorDiv.parentNode.insertBefore(statusEl, sensorDiv);
-                return statusEl;
-            }
-        });
     }
 });
