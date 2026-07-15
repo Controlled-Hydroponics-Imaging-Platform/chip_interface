@@ -1,26 +1,32 @@
 from flask import Blueprint, jsonify, request
-from flask_socketio import SocketIO
 import asyncio
 from kasa import Discover, SmartPlug
+from kasa.exceptions import KasaException
+import threading
 
 plugin_blueprint = Blueprint('kasa_plug',
                              __name__,
                              url_prefix='/kasa_plug')
 
 scripts = ["kasa_plug.js"]
+_kasa_lock = threading.Lock()
 
 # Async-safe runner to prevent RuntimeError
-def run_async(coro):
-    loop = asyncio.new_event_loop()
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
+def run_async(async_func, *args):
+    with _kasa_lock:
+        loop = asyncio.new_event_loop()
+
+        try:
+            return loop.run_until_complete(async_func(*args))
+        finally:
+            loop.close()
 
 # API Endpoint to get all Kasa devices
 @plugin_blueprint.route("/get_kasa_devices")
 def get_kasa_devices():
-    devices = run_async(discover_kasa_devices())
+    # devices = run_async(discover_kasa_devices())
+    devices = run_async(discover_kasa_devices)
+
     return jsonify(devices)
 
 async def discover_kasa_devices():
@@ -46,7 +52,9 @@ def set_plug():
     # Convert '1'/'0', 'true'/'false', etc. to boolean
     state = str(state).lower() in ("1", "true", "on")
 
-    result = run_async(set_kasa_plug(ip, state))
+    # result = run_async(set_kasa_plug(ip, state))
+    result = run_async(set_kasa_plug, ip, state)
+
     
     return jsonify({"message": result})
 
@@ -69,12 +77,37 @@ async def set_kasa_plug(ip, state):
 # Toggle plug ON/OFF
 @plugin_blueprint.route("/toggle", methods=["POST"])
 def toggle_plug():
-    ip = request.args.get("ip")
-    if not ip:
-        return jsonify({"error": "Missing plug IP"}), 400
+    ip = request.args.get("ip", "").strip()
 
-    result = run_async(toggle_kasa_plug(ip))
-    return jsonify({"message": result})
+    if not ip:
+        return jsonify({
+            "success": False,
+            "error": "Missing plug IP"
+        }), 400
+
+    try:
+        # result = run_async(toggle_kasa_plug(ip))
+        result = run_async(toggle_kasa_plug, ip)
+
+        return jsonify({
+            "success": True,
+            "ip": ip,
+            "message": result
+        })
+
+    except KasaException as exc:
+        return jsonify({
+            "success": False,
+            "ip": ip,
+            "error": f"Plug communication failed: {exc}"
+        }), 503
+
+    except Exception as exc:
+        return jsonify({
+            "success": False,
+            "ip": ip,
+            "error": str(exc)
+        }), 503
 
 async def toggle_kasa_plug(ip):
     plug = SmartPlug(ip)
@@ -90,12 +123,40 @@ async def toggle_kasa_plug(ip):
 @plugin_blueprint.route("/status", methods=["GET"])
 def get_plug_status():
     ip = request.args.get("ip")
+
     if not ip:
-        return jsonify({"error": "Missing plug IP"}), 400
+        return jsonify({
+            "success": False,
+            "error": "Missing plug IP"
+        }), 400
 
-    state = run_async(get_kasa_plug_state(ip))
-    return jsonify({"ip": ip, "state": state})
+    try:
+        # state = run_async(get_kasa_plug_state(ip))
+        state = run_async(get_kasa_plug_state, ip)
 
+        return jsonify({
+            "success": True,
+            "ip": ip,
+            "state": state
+        })
+
+    except KasaException as exc:
+        # Temporary plug/network communication failure
+        return jsonify({
+            "success": False,
+            "ip": ip,
+            "state": None,
+            "error": str(exc)
+        }), 503
+
+    except RuntimeError as exc:
+        return jsonify({
+            "success": False,
+            "ip": ip,
+            "state": None,
+            "error": str(exc)
+        }), 503
+    
 async def get_kasa_plug_state(ip):
     plug = SmartPlug(ip)
     await plug.update()
