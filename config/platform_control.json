@@ -6,7 +6,7 @@
         "values": [
             ""
         ],
-        "set_to": "192.168.51.215",
+        "set_to": "",
         "schedule": [
             {
                 "days": [
@@ -20,9 +20,16 @@
                 ],
                 "start": "06:30",
                 "end": "06:35"
+            },
+            {
+                "days": [
+                    "Tuesday"
+                ],
+                "start": "13:22",
+                "end": "14:22"
             }
         ],
-        "auto_enabled": false
+        "auto_enabled": true
     },
     "Light": {
         "label": "LED Light",
@@ -31,7 +38,7 @@
         "values": [
             ""
         ],
-        "set_to": "192.168.51.218",
+        "set_to": "",
         "schedule": [
             {
                 "days": [
