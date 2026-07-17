@@ -24,6 +24,6 @@
         "label": "Enable data logging",
         "type": "checkbox",
         "value_type": "boolean",
-        "set_to": true
+        "set_to": false
     }
 }
