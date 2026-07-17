@@ -18,12 +18,12 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "anada one"
+        "set_to": "test124"
     },
     "data_logging": {
         "label": "Enable data logging",
         "type": "checkbox",
         "value_type": "boolean",
-        "set_to": false
+        "set_to": true
     }
 }
