@@ -1,7 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for, current_app
 import os, json
-from flask_socketio import SocketIO
-import eventlet
 from datetime import datetime
 from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"

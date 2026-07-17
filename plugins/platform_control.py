@@ -3,12 +3,16 @@ import os, json
 from datetime import datetime
 strfmt= "%Y-%m-%d %H:%M:%S"
 import requests
+from lib.pi_data_storage_handler import database_handler as dh
+from lib.data_aggregator.capture_registry import capture_registry
+
 
 plugin_blueprint = Blueprint('platform_control',
                 __name__,
                 url_prefix='/platform_control')
 
 panel_association = "Platform_Control"
+experiment_panel_association = "Experiments" 
 
 scripts =["platform_control.js"]
 
@@ -16,6 +20,12 @@ host_url=None
 control_schedule_list = {}
 
 control_scheduler_alias = None
+
+data_handler = None
+last_seen_data = {}
+active_experiment=None
+
+
 
 
 def load_config(root_path, config_file):
@@ -102,10 +112,13 @@ def reload_routine(socketio, app):
 
 # API
 @plugin_blueprint.route("/processed_data")
-def get_serial_data():
-    device = request.args.get("device")
+def get_control_data():
+    # device = request.args.get("device")
+    output_data = {}
 
-    # output_data = serial_device_list[device].last_output
+    for device_name, control_device in control_schedule_list.items():
+        data =control_device.get_last_output()
 
+        output_data[device_name] = data
 
     return jsonify(output_data)  # Return JSON response

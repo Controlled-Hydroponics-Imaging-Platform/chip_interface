@@ -6,7 +6,7 @@
         "values": [
             ""
         ],
-        "set_to": "",
+        "set_to": "192.168.2.70",
         "schedule": [
             {
                 "days": [
@@ -18,15 +18,8 @@
                     "Saturday",
                     "Sunday"
                 ],
-                "start": "06:30",
-                "end": "06:35"
-            },
-            {
-                "days": [
-                    "Tuesday"
-                ],
-                "start": "13:22",
-                "end": "14:22"
+                "start": "20:14",
+                "end": "20:18"
             }
         ],
         "auto_enabled": true

@@ -228,7 +228,9 @@ class ControlScheduler:
 
         self.stop_event = threading.Event()
         self._state_lock = threading.Lock()
+        self._last_output_lock = threading.Lock()
         self.last_state = False
+        self.last_output = {}
 
     def start(self):
         self.kill()  # Always clean start
@@ -264,7 +266,7 @@ class ControlScheduler:
         if self.state_sync_task:
             self.state_sync_task.join(timeout=5)
 
-            if self.task.is_alive():
+            if self.state_sync_task.is_alive():
                 raise RuntimeError(
                     f"{self.device_name} scheduler failed to stop"
                 )
@@ -280,14 +282,18 @@ class ControlScheduler:
             while not self.stop_event.is_set():
                 try:
                     with eventlet.Timeout(5, False):  # ✅ Optional timeout safety
+                        timestamp = datetime.now().astimezone()
                         real_state = self.check_state_callback(self.device_ip)
                         # self.last_state = real_state
                         self._set_last_state(real_state)
 
                         output_data = {
                                     "data": real_state,
-                                    "timestamp": datetime.now().strftime(strfmt)
+                                    "timestamp": timestamp.strftime(strfmt),
+                                    "timestamp_utc": timestamp.astimezone(timezone.utc).isoformat()
                                 }
+                        with self._last_output_lock:
+                            self.last_output = output_data
                         self.socketio.emit(f"{self.device_name}_control_update", output_data)
                         # print(f"🔄 Synced state: {self.device_name} is {'ON' if real_state else 'OFF'}")
                 except Exception as e:
@@ -306,8 +312,8 @@ class ControlScheduler:
                     yesterday = (now - timedelta(days=1)).strftime("%A")
 
                     current_time = now.time()
-                    print(f"🕒 Now: {now}, Today: {today}, Current time: {current_time}")
-                    print(f"📅 Schedule: {self.schedule}")
+                    # print(f"🕒 Now: {now}, Today: {today}, Current time: {current_time}")
+                    # print(f"📅 Schedule: {self.schedule}")
                     # print(self.schedule)
 
                     should_be_on = False
@@ -341,13 +347,14 @@ class ControlScheduler:
                                 )
                             )
 
-                        print(f"    Checking: {block_days}")
-                        print(f"    Start: {start_time}, End: {end_time}, Now: {current_time}")
-                        print(f"    Today: {today}, Yesterday: {yesterday}")
-                        print(f"    In range? {in_range}")
-
                         if in_range:
                             should_be_on = True
+                            print(f"    Device: {self.device_name}")
+                            print(f"    Checking: {block_days}")
+                            print(f"    Start: {start_time}, End: {end_time}, Now: {current_time}")
+                            print(f"    Today: {today}, Yesterday: {yesterday}")
+                            print(f"    In range? {in_range}")
+                            
                             break
 
                     # Only act if the state needs changing
@@ -360,11 +367,19 @@ class ControlScheduler:
                             # self.last_state = should_be_on  # ✅ Update assuming success
                             self._set_last_state(should_be_on)
 
+                            output_data = { "data":self._get_last_state(),
+                                            "timestamp":now.strftime(strfmt),
+                                            "timestamp_utc": now.astimezone(timezone.utc).isoformat()
+                                            }
+                            
+                            with self._last_output_lock:
+                                self.last_output = output_data
+
                         except Exception as e:
                             print(f"❌ Failed to toggle {self.device_name}: {e}")
                 except Exception as loop_err:
                     print(f"❌ Unexpected crash in control loop for {self.device_name}: {loop_err}")
-                    
+
                 if self.stop_event.wait(timeout=30):
                     break
         finally:
@@ -385,6 +400,10 @@ class ControlScheduler:
         except (ValueError, TypeError):
             return None
 
+    def get_last_output(self):
+        with self._last_output_lock:
+            self.last_output["schedule"] = self.schedule
+            return self.last_output.copy()
         
 class SerialReader:
     def __init__(self, socketio, device_name, port, baudrate, timeout, process_raw_data, poll_rate):
