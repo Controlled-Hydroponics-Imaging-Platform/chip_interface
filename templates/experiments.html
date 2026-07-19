@@ -67,6 +67,44 @@
 
 <div id="selectedExperimentDetails"></div>
 
+<hr>
+
+<h2>Download SQL Database</h2>
+
+<div class="download-database">
+    <button type="button" id="download-database-button">
+        Download Database
+    </button>
+
+    <p id="database-download-status"></p>
+</div>
+
+<hr>
+
+<h2>Download Image Dataset</h2>
+
+<div class="download-image-dataset">
+    <label for="image-dataset-experiment">
+        Select image dataset
+    </label>
+
+    <select id="image-dataset-experiment">
+        <option value="">Loading...</option>
+    </select>
+
+    <button type="button" id="download-image-dataset-button">
+        Download Images
+    </button>
+
+    <p id="image-download-status"></p>
+</div>
+
+
+
+
+
+
+
 <script>
 let experiments = [];
 
@@ -92,24 +130,51 @@ async function loadActiveExperiment() {
     `;
 }
 
+
 async function loadExperiments() {
     const response = await fetch("/experiments/get_all_experiments");
     const data = await response.json();
 
     experiments = data.experiments || [];
 
-    const dropdown = document.getElementById("experimentDropdown");
+    const activeDropdown =
+        document.getElementById("experimentDropdown");
+
+    const downloadDropdown =
+        document.getElementById("image-dataset-experiment");
 
     if (experiments.length === 0) {
-        dropdown.innerHTML = `<option value="">No experiments found</option>`;
+        activeDropdown.innerHTML = `
+            <option value="">No experiments found</option>
+        `;
+
+        downloadDropdown.innerHTML = `
+            <option value="">No experiments found</option>
+            <option value="__all__">All experiments</option>
+        `;
+
         return;
     }
 
-    dropdown.innerHTML = experiments.map(exp => `
+    // Populate active-experiment dropdown
+    activeDropdown.innerHTML = experiments.map(exp => `
         <option value="${exp.experiment_id}">
             ${exp.name} — ${exp.crop} — ${exp.start_time}
         </option>
     `).join("");
+
+    // Populate image-download dropdown
+    downloadDropdown.innerHTML = `
+        <option value="">Choose an experiment</option>
+        <option value="__all__">All experiments</option>
+        <option value="active">Active experiment</option>
+
+        ${experiments.map(exp => `
+            <option value="${exp.experiment_id}">
+                ${exp.name} — ${exp.experiment_id}
+            </option>
+        `).join("")}
+    `;
 
     showSelectedExperimentDetails();
 }
@@ -155,6 +220,7 @@ async function setActiveExperiment(experimentId) {
     }
 
     await loadActiveExperiment();
+    await loadExperiments();
 }
 
 document.getElementById("experimentDropdown").addEventListener("change", () => {
@@ -209,6 +275,62 @@ document.getElementById("createExperimentForm").addEventListener("submit", async
     await loadExperiments();
     await loadActiveExperiment();
 });
+
+document
+    .getElementById("download-database-button")
+    .addEventListener("click", () => {
+        const status = document.getElementById(
+            "database-download-status"
+        );
+
+        status.innerText = "Preparing download...";
+
+        window.location.href =
+            "/experiments/download_database";
+
+        setTimeout(() => {
+            status.innerText = "";
+        }, 2000);
+    });
+
+document
+    .getElementById("download-image-dataset-button")
+    .addEventListener("click", () => {
+        const dropdown = document.getElementById(
+            "image-dataset-experiment"
+        );
+
+        const status = document.getElementById(
+            "image-download-status"
+        );
+
+        const experimentId = dropdown.value;
+
+        if (!experimentId) {
+            status.innerText = "Please select an image dataset.";
+            return;
+        }
+
+        let downloadUrl;
+
+        if (experimentId === "__all__") {
+            downloadUrl =
+                "/experiments/download_image_dataset";
+        } else {
+            downloadUrl =
+                "/experiments/download_image_dataset/" +
+                encodeURIComponent(experimentId);
+        }
+
+        status.innerText = "Preparing download...";
+
+        window.location.href = downloadUrl;
+
+        // Clear the message after the browser starts the request
+        setTimeout(() => {
+            status.innerText = "";
+        }, 2000);
+    });
 
 loadActiveExperiment();
 loadExperiments();

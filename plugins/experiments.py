@@ -6,12 +6,17 @@ from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
 from lib.pi_data_storage_handler import database_handler as dh
 from influxdb_client_3 import InfluxDBClient3, Point
+import io
+import zipfile
+
 
 data_handler = None
 last_seen_data = {}
 panel_association = "Experiments"
 root_path = None
 active_experiment = None
+image_root_path = None
+active_image_path = None
 
 plugin_blueprint = Blueprint('experiments',
                 __name__,
@@ -29,12 +34,14 @@ def load_config(root_path, config_file):
             return {}
 
 def load_routine(app):
-    global data_handler, active_experiment
+    global data_handler, active_experiment, image_root_path, active_image_path
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
     config = load_config(app.root_path, config_file)
 
     active_experiment = config["active_experiment"]["set_to"]
+    image_root_path = config["image_storage_path"]["set_to"]
+    active_image_path = image_root_path + "/" + active_experiment
 
     data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.DEFAULT_TABLES)
 
@@ -69,15 +76,6 @@ def get_all_experiments():
         "ok": True,
         "experiments": experiments
     })
-
-# EXPERIMENTS_META_TABLE_CONTENT = """
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     experiment_id TEXT NOT NULL UNIQUE,
-#     name TEXT NOT NULL,
-#     crop TEXT NOT NULL,
-#     start_time TEXT NOT NULL,
-#     notes TEXT
-# """
 
 @plugin_blueprint.route("/create_new_experiment", methods=["POST"])
 def create_new_experiment():
@@ -190,6 +188,64 @@ def download_database():
                      download_name=database_path.name,
                      mimetype="application/vnd.sqlite3")
 
+@plugin_blueprint.route("/download_image_dataset")
+@plugin_blueprint.route("/download_image_dataset/<experiment_id>", methods=["GET"])
+def download_images(experiment_id=None):
+    global image_root_path, active_image_path, active_experiment
+
+    if experiment_id is None:
+        image_path = Path(image_root_path)
+        file_name = "CHIP_IMAGE_DATASET"
+    elif experiment_id == "active":
+        image_path = Path(active_image_path)
+        file_name = active_experiment
+    else:
+        exp_path = image_root_path + "/" + experiment_id
+        image_path = Path(exp_path)
+        file_name = experiment_id
+
+
+    if not image_path.exists():
+        return jsonify({
+            "ok": False,
+            "error": "Image directory does not exist"
+        }), 404
+    
+    # image_files = [
+    #     p for p in image_path.iterdir()
+    #     if p.is_file() and p.suffix.lower() in {
+    #         ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"
+    #     }
+    # ]
+
+    image_files = [
+    p for p in image_path.rglob("*")
+    if p.is_file() and p.suffix.lower() in {
+        ".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"
+    }
+]
+
+    if not image_files:
+        return jsonify({
+            "ok": False,
+            "error": "No images found."
+        }), 404
+    
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for image in image_files:
+            # zf.write(image, arcname=image.name)
+            zf.write(image, arcname=image.relative_to(image_path))
+
+    zip_buffer.seek(0)
+
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"{file_name}.zip",
+        mimetype="application/zip"
+    )
 
 # @plugin_blueprint.route("/processed_data")
 # def get_mqtt_data():
