@@ -4,7 +4,7 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "data/test4_dataset.db"
+        "set_to": "data/20260719_CHIPDATA.db"
     },
     "image_storage_path": {
         "label": "Image Storage Directory",
@@ -18,7 +18,7 @@
         "type": "text",
         "value_type": "text",
         "values": [],
-        "set_to": "test35"
+        "set_to": "LETTUCE001"
     },
     "data_logging": {
         "label": "Enable data logging",
