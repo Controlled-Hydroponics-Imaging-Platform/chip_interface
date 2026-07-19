@@ -201,7 +201,7 @@ def register_serial_sockets(SerialReader, socketio, app):
     experiment_config_file = load_config(app.root_path, "panels.json")[experiment_panel_association]['config']['set_to']
     experiment_config = load_config(app.root_path, experiment_config_file)
     active_experiment = experiment_config["active_experiment"]["set_to"]
-    image_storage_path = experiment_config["image_storage_path"]["set_to"]
+    image_storage_path = experiment_config["image_storage_path"]["set_to"]+"/"+active_experiment
 
     if experiment_config["data_logging"]["set_to"]:
         data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)

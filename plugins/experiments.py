@@ -1,7 +1,6 @@
-from flask import Blueprint, jsonify, request, url_for, current_app
+from flask import Blueprint, jsonify, request, url_for, send_file, current_app
 import os, json
-from flask_socketio import SocketIO
-import eventlet
+from pathlib import Path
 from datetime import datetime
 from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
@@ -71,14 +70,14 @@ def get_all_experiments():
         "experiments": experiments
     })
 
-EXPERIMENTS_META_TABLE_CONTENT = """
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    experiment_id TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    crop TEXT NOT NULL,
-    start_time TEXT NOT NULL,
-    notes TEXT
-"""
+# EXPERIMENTS_META_TABLE_CONTENT = """
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     experiment_id TEXT NOT NULL UNIQUE,
+#     name TEXT NOT NULL,
+#     crop TEXT NOT NULL,
+#     start_time TEXT NOT NULL,
+#     notes TEXT
+# """
 
 @plugin_blueprint.route("/create_new_experiment", methods=["POST"])
 def create_new_experiment():
@@ -173,6 +172,23 @@ def get_active_experiment():
         "active_experiment": active_experiment,
         "experiment": None if row is None else dict(row)
     })
+
+@plugin_blueprint.route("/download_database", methods=["GET"])
+def download_database():
+    global data_handler
+
+    database_path = data_handler.db_path
+
+    if not database_path.exists():
+        return jsonify({
+            "ok": False,
+            "error": "Database does not exist"
+        }), 404
+    
+    return send_file(database_path,
+                     as_attachment=True,
+                     download_name=database_path.name,
+                     mimetype="application/vnd.sqlite3")
 
 
 # @plugin_blueprint.route("/processed_data")
