@@ -130,11 +130,16 @@ def linear_gantry_routine_callback(device):
 
         routine_data_handler.insert("capture_events", capture_event_data)
 
+        time.sleep(1)
+
         for data in data_out.values():
 
             sorted_data = {param:value for param,value in data.items() if param != "data_table"}
             
             routine_data_handler.insert(data["data_table"], sorted_data)
+        
+        time.sleep(1)
+        print(f"Capture Event: {capture_id} logged\nData: {data_out}")
 
 
     ## Return Home
