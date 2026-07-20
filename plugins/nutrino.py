@@ -111,7 +111,7 @@ def capture_nutrino_data():
             # "experiment_id": active_experiment,
             "device_id": nutrino_device.device_name,
             "sensor_type":"nutrient_reservoir",
-            "payload_json": data_out.get("data"),
+            "payload_json": json.dumps(data_out.get("data")),
             "timestamp": data_out.get("timestamp_utc")        
             }
     

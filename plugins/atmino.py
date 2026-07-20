@@ -111,7 +111,7 @@ def capture_atmino_data():
             # "experiment_id": active_experiment,
             "device_id": atmino_device.device_name,
             "sensor_type":"envirionment",
-            "payload_json": data_out.get("data"),
+            "payload_json": json.dumps(data_out.get("data")),
             "timestamp": data_out.get("timestamp_utc")        
             }
     

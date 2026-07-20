@@ -109,38 +109,59 @@ def linear_gantry_routine_callback(device):
     while (res:=linear_gantry_device_list[device].next())[1]:
         out =res[0]
         
-        if out:
-            serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-            time.sleep(0.01)
-            serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+        # if out:
+        #     serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        #     time.sleep(0.01)
+        #     serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+
+        if not out:
+            print(f"{device}: planner returned no motion output")
+            continue
+
+        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        time.sleep(0.01)
+        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
 
         print(f"moving to {out['target_pose']}")
         time.sleep(out['t_s']*2)
         print(f"{device}: current pose{linear_gantry_device_list[device].get_current_pose()}")
 
         #### This is where the data protocol goes
-        data_out,capture_id=capture_registry.collect()
-        timestamp = datetime.now().astimezone()
-        timestamp_utc = timestamp.astimezone(timezone.utc).isoformat()
+        try:
+            data_out,capture_id = capture_registry.collect()
+            timestamp = datetime.now().astimezone()
+            timestamp_utc = timestamp.astimezone(timezone.utc).isoformat()
 
-        capture_event_data = {"capture_id": capture_id,
-                              "experiment_id": active_experiment,
-                               "timestamp": timestamp_utc,
-                                "notes": data_out }
+            capture_event_data = { "capture_id": capture_id,
+                                    "experiment_id": active_experiment,
+                                    "timestamp": timestamp_utc,
+                                    "notes": json.dumps(data_out) }
 
-        routine_data_handler.insert("capture_events", capture_event_data)
+            routine_data_handler.insert("capture_events", capture_event_data)
 
-        time.sleep(1)
+            time.sleep(1)
 
-        for data in data_out.values():
+            for data in data_out.values():
+                try:
+                    table_name = data.get("data_table")
 
-            sorted_data = {param:value for param,value in data.items() if param != "data_table"}
+                    if not table_name:
+                        raise ValueError("Missing data_table")
+
+                    sorted_data = {param:value for param,value in data.items() if param != "data_table"}
+                    sorted_data["capture_id"] = capture_id
+                    routine_data_handler.insert(table_name, sorted_data)
+                except Exception as e:
+                    print(
+                        f"Could not log {data} into "
+                        f"{data.get('data_table', '<unknown>')}: {e}"
+                    )
             
-            routine_data_handler.insert(data["data_table"], sorted_data)
+            time.sleep(1)
+            print(f"Capture Event: {capture_id} logged\nData: {data_out}")
         
-        time.sleep(1)
-        print(f"Capture Event: {capture_id} logged\nData: {data_out}")
-
+        except Exception as e:
+            print(f"Failed to log capture event in dataset: {e}")
 
     ## Return Home
     out = linear_gantry_device_list[device].home()
@@ -416,7 +437,7 @@ def capture_pose_data(device_id):
                 "x_mm":data_out["pose_data"].get("x"),
                 "y_mm":data_out["pose_data"].get("y"),
                 "z_mm":data_out["pose_data"].get("z"),
-                "raw_joints_json": data_out.get("data"),
+                "raw_joints_json": json.dumps(data_out.get("data")),
                 "pose_is_stale" : 1 if data_out["pose_data"].get("pose_is_stale") else 0,
                 "standby_mode" : 1 if data_out["pose_data"].get("standby_mode") else 0,
                 "timestamp": data_out.get("timestamp_utc")        
