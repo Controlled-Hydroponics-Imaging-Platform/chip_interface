@@ -108,7 +108,7 @@ def capture_nutrino_data():
 
     sorted_data= {
             "data_table": "sensor_events",
-            "experiment_id": active_experiment,
+            # "experiment_id": active_experiment,
             "device_id": nutrino_device.device_name,
             "sensor_type":"nutrient_reservoir",
             "payload_json": data_out.get("data"),

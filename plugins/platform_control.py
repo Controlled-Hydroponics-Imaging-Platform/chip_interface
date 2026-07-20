@@ -169,7 +169,7 @@ def capture_platform_control_data(device_id):
 
     sorted_data= {
                 "data_table": "scheduled_events",
-                "experiment_id": active_experiment,
+                # "experiment_id": active_experiment,
                 "device_id": device_id,
                 "event_type": device_id,
                 "status": data_out.get("data"),

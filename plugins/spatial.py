@@ -6,6 +6,8 @@ from lib.motion_planner import routine_coordinator
 from lib.pi_data_storage_handler import database_handler as dh
 from lib.pi_data_storage_handler.image_data_handler import request_frame
 from lib.data_aggregator.capture_registry import capture_registry
+from datetime import datetime, timezone, timedelta
+
 
 plugin_blueprint = Blueprint('spatial',
                 __name__,
@@ -22,6 +24,7 @@ linear_gantry_device_list = {}
 device_routine_coordinator_list= {}
 camera_server = None
 data_handler = None
+routine_data_handler = None
 last_seen_data = {}
 active_experiment=None
 app_root_path = None
@@ -76,10 +79,12 @@ def process_driver_data(raw_serial_output):
     return data_dict
 
 def linear_gantry_routine_callback(device):
+    global capture_registry, data_handler, active_experiment
     """
     Callback for routine scheduler
     Workflow: standby off > calibrate > while data and motion routine > Return Home>  standby on
     """
+
     ## Standby off
     print(f"{device} action routine triggered")
 
@@ -114,6 +119,22 @@ def linear_gantry_routine_callback(device):
         print(f"{device}: current pose{linear_gantry_device_list[device].get_current_pose()}")
 
         #### This is where the data protocol goes
+        data_out,capture_id=capture_registry.collect()
+        timestamp = datetime.now().astimezone()
+        timestamp_utc = timestamp.astimezone(timezone.utc).isoformat()
+
+        capture_event_data = {"capture_id": capture_id,
+                              "experiment_id": active_experiment,
+                               "timestamp": timestamp_utc,
+                                "notes": data_out }
+
+        routine_data_handler.insert("capture_events", capture_event_data)
+
+        for data in data_out.values():
+
+            sorted_data = {param:value for param,value in data.items() if param != "data_table"}
+            
+            routine_data_handler.insert(data["data_table"], sorted_data)
 
 
     ## Return Home
@@ -157,6 +178,7 @@ def register_serial_sockets(SerialReader, socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
     global camera_server, data_handler, active_experiment, last_seen_data
     global app_root_path, image_storage_path
+    global routine_data_handler
 
     serial_reader_alias = SerialReader
     app_root_path = app.root_path
@@ -203,10 +225,14 @@ def register_serial_sockets(SerialReader, socketio, app):
     active_experiment = experiment_config["active_experiment"]["set_to"]
     image_storage_path = experiment_config["image_storage_path"]["set_to"]+"/"+active_experiment
 
+    #local data_handler
     if experiment_config["data_logging"]["set_to"]:
         data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.POSE_TABLE)
         data_handler.start(continuous_pose_logging,routine_name="continuous_pose_logging")
-        
+
+    #global routine data_handler for capture routine
+    routine_data_handler = dh.SQLiteDataHandler(experiment_config["database_path"]["set_to"],dh.DEFAULT_TABLES)
+
     for device_id, serial_device in serial_device_list.items():
 
         #register dataoutput callback to capture_registry
@@ -309,7 +335,7 @@ def register_socket_handlers(socketio):
 
 def reload_routine(socketio, app):
     global serial_device_list, serial_reader_alias, linear_gantry_device_list, device_routine_coordinator_list
-    global data_handler
+    global data_handler, routine_data_handler
 
     #de-register callback from capture_register
     # Kill serial devices
@@ -334,6 +360,9 @@ def reload_routine(socketio, app):
     if data_handler:
         data_handler.kill_all()
         data_handler = None
+    
+    if routine_data_handler:
+        routine_data_handler=None
 
     # Re-register
     register_serial_sockets(serial_reader_alias, socketio, app)
@@ -378,7 +407,7 @@ def capture_pose_data(device_id):
     sorted_data= {
                 "data_table": "pose_events",
                 "device_id": device_id,
-                "experiment_id": active_experiment,
+                # "experiment_id": active_experiment,
                 "x_mm":data_out["pose_data"].get("x"),
                 "y_mm":data_out["pose_data"].get("y"),
                 "z_mm":data_out["pose_data"].get("z"),
