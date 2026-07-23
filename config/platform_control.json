@@ -542,7 +542,7 @@
                 "end": "23:15"
             }
         ],
-        "auto_enabled": true
+        "auto_enabled": false
     },
     "Light": {
         "label": "LED Light",
