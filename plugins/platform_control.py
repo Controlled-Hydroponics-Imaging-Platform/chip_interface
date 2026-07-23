@@ -106,7 +106,7 @@ def register_control_scheduler_sockets(ControlScheduler, socketio, app):
 
     for device_id, control_device in control_schedule_list.items():
         #register dataoutput callback to capture_registry
-        capture_registry.register(f"{device_id}_data", lambda: capture_platform_control_data(device_id))
+        capture_registry.register(f"{device_id}_data", lambda device_id=device_id: capture_platform_control_data(device_id))
 
         #get the last output
         data =control_device.get_last_output()
