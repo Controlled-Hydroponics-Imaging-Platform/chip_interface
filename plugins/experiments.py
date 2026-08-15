@@ -76,7 +76,7 @@ def load_routine(app):
     image_dataset_handler = idh.ImageDatasetHandler(image_root_path,aws_s3_creds)
 
     if config["cloud_db_sync"]["set_to"]:
-        data_handler.start(data_cloud_sync_cb,run_rate_s=300,routine_name="data_cloud_sync_cb")
+        data_handler.start(data_cloud_sync_cb,run_rate_s=60,routine_name="data_cloud_sync_cb")
     
 
 
