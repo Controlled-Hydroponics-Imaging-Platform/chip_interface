@@ -5,12 +5,20 @@ from datetime import datetime
 from time import sleep
 strfmt= "%Y-%m-%d %H:%M:%S"
 from lib.pi_data_storage_handler import database_handler as dh
+from lib.pi_data_storage_handler import image_data_handler as idh
 from influxdb_client_3 import InfluxDBClient3, Point
 import io
 import zipfile
 
+influxdb_creds_path = "config/creds/influxdb_creds.json"
+aws_s3_creds_path = "config/creds/aws_s3_creds.json"
+influxdb_creds = None
+aws_s3_creds = None
+inflxdb_bucket = None
+aws_s3_bucket = None
 
 data_handler = None
+image_dataset_handler = None
 last_seen_data = {}
 panel_association = "Experiments"
 root_path = None
@@ -24,6 +32,21 @@ plugin_blueprint = Blueprint('experiments',
 
 scripts =[]
 
+def load_creds(creds_path):
+    creds_path = Path(creds_path)
+    try:
+        with open(creds_path, "r") as file:
+            return json.load(file)
+
+    except FileNotFoundError:
+        print(f"Credentials file not found: {creds_path}")
+        return {}
+
+    except json.JSONDecodeError as e:
+        print(f"JSON Error: {e}")
+        return {}
+
+
 def load_config(root_path, config_file):
         config_path = os.path.join(root_path, "config", config_file)  # Correct path
         try:
@@ -34,16 +57,31 @@ def load_config(root_path, config_file):
             return {}
 
 def load_routine(app):
-    global data_handler, active_experiment, image_root_path, active_image_path
+    global data_handler, image_dataset_handler, active_experiment, image_root_path, active_image_path
+    global aws_s3_creds_path, influxdb_creds_path, aws_s3_creds, influxdb_creds, aws_s3_bucket, inflxdb_bucket
 
     config_file = load_config(app.root_path, "panels.json")[panel_association]['config']['set_to']
     config = load_config(app.root_path, config_file)
+
+    influxdb_creds = load_creds(influxdb_creds_path)
+    aws_s3_creds = load_creds(aws_s3_creds_path)
+    inflxdb_bucket = config["influxdb_bucket"]["set_to"]
+    aws_s3_bucket = config["aws_s3_bucket"]["set_to"]
 
     active_experiment = config["active_experiment"]["set_to"]
     image_root_path = config["image_storage_path"]["set_to"]
     active_image_path = image_root_path + "/" + active_experiment
 
-    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.DEFAULT_TABLES)
+    data_handler = dh.SQLiteDataHandler(config["database_path"]["set_to"],dh.DEFAULT_TABLES,influxdb_creds=influxdb_creds)
+    image_dataset_handler = idh.ImageDatasetHandler(image_root_path,aws_s3_creds)
+
+    if config["cloud_db_sync"]["set_to"]:
+        data_handler.start(data_cloud_sync_cb,run_rate_s=300,routine_name="data_cloud_sync_cb")
+    
+
+
+    # print(f"tables to sync{data_handler.get_tables}")
+    # print(f"image trails to sync{image_dataset_handler.get_image_groups}")
 
 
 def reload_routine(socketio, app):
@@ -54,8 +92,36 @@ def reload_routine(socketio, app):
     data_handler = None
     active_experiment = None
 
+    ## deactivate image datahandlers
+
     # Re-register
     load_routine(app)
+
+
+
+## Data thread callbacks
+
+def data_cloud_sync_cb():
+    # global atmino_device, data_handler, last_seen_data, active_experiment
+    global image_dataset_handler, data_handler
+    global aws_s3_bucket, inflxdb_bucket
+
+    image_group_list = image_dataset_handler.get_image_groups()
+
+    print(f"syncing images for the following groups: {', '.join(image_group_list)}")
+
+    for group in image_group_list:
+        resp = image_dataset_handler.sync_with_s3_bucket(group,aws_s3_bucket,limit=50)
+        print(f"synced image results for {group}:\n{resp}")
+
+    
+    data_tables = data_handler.get_tables()
+
+    print(f"syncing data for the following tables: {', '.join(data_tables)}")
+
+    for data_table in data_tables:
+        resp = data_handler.sync_to_influx_db(data_table,inflxdb_bucket,limit=100)
+        print(f"synced data results for {data_table}:\n{resp}")
 
 ### API
 

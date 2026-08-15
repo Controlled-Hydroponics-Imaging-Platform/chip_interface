@@ -20,8 +20,28 @@
         "values": [],
         "set_to": "LETTUCE001"
     },
+    "influxdb_bucket": {
+        "label": "Influxdb Bucket",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "chip-prd-lettuce"
+    },
+    "aws_s3_bucket": {
+        "label": "AWS s3 Bucket",
+        "type": "text",
+        "value_type": "text",
+        "values": [],
+        "set_to": "chip-prd-lettuce-255660117660-us-east-2-an"
+    },    
     "data_logging": {
         "label": "Enable data logging",
+        "type": "checkbox",
+        "value_type": "boolean",
+        "set_to": true
+    },
+    "cloud_db_sync": {
+        "label": "Enable syncing with cloud db",
         "type": "checkbox",
         "value_type": "boolean",
         "set_to": true
