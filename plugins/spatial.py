@@ -34,47 +34,64 @@ image_storage_path = None
 
 def process_driver_data(raw_serial_output):
     """
-    Processes the raw output from serial device of the chip motor_driver
-    :param raw_serial_output: Example - [OUTPUT] z_limit(limit_switch):off y_limit(limit_switch):off x_limit(limit_switch):off x(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), y(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps), z(StepperMotor):100.0000(rpm),+,0.00000(rev),0(steps),
+    Parse the [OUTPUT] line from the stepper motor controller.
     """
+
     data_dict = {
-        axis:{"limit_switch_state": None,
-              "speed_rpm": None,
-              "direction": None,
-              "position_rev": None,
-              "position_step": None}
-        for axis in ("x", "y", "z")         
+        axis: {
+            "limit_switch_state": None,
+            "speed_rpm": None,
+            "direction": None,
+            "position_rev": None,
+            "position_step": None,
+            "position_deg": None,
+            "position_deg_wrapped": None,
+        }
+        for axis in ("x", "y", "z")
     }
 
     # Parse limit switches
-    limit_pattern = re.compile(r"([xyz])_limit\(limit_switch\):(\w+)")
+    limit_pattern = re.compile(
+        r"([xyz])_limit\(limit_switch\):(\w+)"
+    )
+
     for axis, state in limit_pattern.findall(raw_serial_output):
         data_dict[axis]["limit_switch_state"] = state
 
-    # Parse stepper motor blocks
+    # Parse stepper motors
     motor_pattern = re.compile(
         r"([xyz])\(StepperMotor\):"
-        r"(-?\d+(?:\.\d+)?)\(rpm\),"   # speed_rpm: optional -, int or float
+        r"(-?\d+(?:\.\d+)?)\(rpm\),"
         r"([+-]),"
-        r"(-?\d+(?:\.\d+)?)\(rev\),"   # position_rev
-        r"(-?\d+)\(steps\)"            # position_step
+        r"(-?\d+(?:\.\d+)?)\(pos_rev\),"
+        r"(-?\d+)\(pos_steps\),"
+        r"(-?\d+(?:\.\d+)?)\(pos_deg\),"
+        r"(-?\d+(?:\.\d+)?)\(deg_wrapped\)"
     )
 
-    for axis, rpm, direction, rev, steps in motor_pattern.findall(raw_serial_output):
+    for axis, rpm, direction, rev, steps, deg, deg_wrapped in motor_pattern.findall(raw_serial_output):
         data_dict[axis]["speed_rpm"] = float(rpm)
         data_dict[axis]["direction"] = direction
         data_dict[axis]["position_rev"] = float(rev)
         data_dict[axis]["position_step"] = int(steps)
+        data_dict[axis]["position_deg"] = float(deg)
+        data_dict[axis]["position_deg_wrapped"] = float(deg_wrapped)
 
+    # Parse standby mode
+    standby_pattern = re.compile(
+        r"([xyz])\(StepperMotor\):Standby\b"
+    )
 
-    #Parse standby mode
-    standby_pattern = re.compile(r"([xyz])\(StepperMotor\):Standby\b")
     for axis in standby_pattern.findall(raw_serial_output):
-        # You can change these defaults if you prefer
-        data_dict[axis]["speed_rpm"] = "standby"
-        data_dict[axis]["direction"] = "standby"
-        data_dict[axis]["position_rev"] = "standby"
-        data_dict[axis]["position_step"] = "standby"
+        for key in (
+            "speed_rpm",
+            "direction",
+            "position_rev",
+            "position_step",
+            "position_deg",
+            "position_deg_wrapped",
+        ):
+            data_dict[axis][key] = "standby"
 
     return data_dict
 
@@ -306,17 +323,26 @@ def register_socket_handlers(socketio):
             out = linear_gantry_device_list[device].home(True)
 
             if out:
-                serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-                time.sleep(0.01)
-                serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+                payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+                serial_device_list[device].write(payload_msg)
+                print(payload_msg)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}")
+
+                # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+                # time.sleep(0.01)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
         
         elif msg["command"]=="home":
             out = linear_gantry_device_list[device].home()
 
             if out:
-                serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-                time.sleep(0.01)
-                serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+                payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+                serial_device_list[device].write(payload_msg)
+                print(payload_msg)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}")
+            #   serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+            #     time.sleep(0.01)
+            #     serial_device_  list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
         
         elif msg["command"]=="standby":
 
@@ -335,10 +361,13 @@ def register_socket_handlers(socketio):
             out =linear_gantry_device_list[device].move([x,y,z], vel)
 
             if out:
-                serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-                time.sleep(0.01)
-                serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
-                time.sleep(0.01)
+                payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+                serial_device_list[device].write(payload_msg)
+                print(payload_msg)
+                # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+                # time.sleep(0.01)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+                # time.sleep(0.01)
 
         elif msg["command"] == "move_to":
             x = float(msg["x"]) 
@@ -349,10 +378,14 @@ def register_socket_handlers(socketio):
             out =linear_gantry_device_list[device].move_to([x,y,z], vel)
 
             if out:
-                serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-                time.sleep(0.01)
-                serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
-                time.sleep(0.01)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}")
+                payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+                serial_device_list[device].write(payload_msg)
+                print(payload_msg)
+                # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+                # time.sleep(0.01)
+                # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+                # time.sleep(0.01)
         else:
             print("command not resigstered to socket callback")
 

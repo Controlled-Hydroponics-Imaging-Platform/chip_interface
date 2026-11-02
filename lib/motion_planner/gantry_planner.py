@@ -100,7 +100,7 @@ class LinearGantryPlanner:
             'action': 'move_joints_revs',
             'target_pose':{'x':float(target_pose[0]),'y': float(target_pose[1]),'z':float(target_pose[2])},
             'delta_q':{'x':float(delta_q[0]),'y': float(delta_q[1]),'z':float(delta_q[2])},
-            'q_dot': {'x':int(q_dot[0]), 'y':int(q_dot[1]), 'z': int(q_dot[2]) },
+            'q_dot': {'x':abs(float(q_dot[0])), 'y':abs(float(q_dot[1])), 'z': abs(float(q_dot[2])) },
             't_s': float(t),
             "distance": float(distance)
         }
