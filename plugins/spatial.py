@@ -114,9 +114,12 @@ def linear_gantry_routine_callback(device):
     ## Calibrate
     out = linear_gantry_device_list[device].home(True)
     if out:
-        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-        time.sleep(0.01)
-        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+        payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+        serial_device_list[device].write(payload_msg)
+        # print(payload_msg)
+        # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        # time.sleep(0.01)
+        # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
     print(f"{device}: calibrating")
     
     time.sleep(out["t_s"]*2)
@@ -135,9 +138,12 @@ def linear_gantry_routine_callback(device):
             print(f"{device}: planner returned no motion output")
             continue
 
-        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-        time.sleep(0.01)
-        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+        # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        # time.sleep(0.01)
+        # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+        payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+        serial_device_list[device].write(payload_msg)
+        # print(payload_msg)
 
         print(f"moving to {out['target_pose']}")
         time.sleep(out['t_s']*2)
@@ -184,9 +190,12 @@ def linear_gantry_routine_callback(device):
     out = linear_gantry_device_list[device].home()
     
     if out:
-        serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
-        time.sleep(0.01)
-        serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
+        payload_msg = f"move x,{out['delta_q']['x']},{out['q_dot']['x']} y,{out['delta_q']['y']},{out['q_dot']['y']} z,{out['delta_q']['z']},{out['q_dot']['z']}"
+        serial_device_list[device].write(payload_msg)
+        # print(payload_msg)
+        # serial_device_list[device].write(f"speed x,{out['q_dot']['x']} y,{out['q_dot']['y']} z,{out['q_dot']['z']}")
+        # time.sleep(0.01)
+        # serial_device_list[device].write(f"move x,{out['delta_q']['x']} y,{out['delta_q']['y']} z,{out['delta_q']['z']}")
     print(f"{device}: Returning Home")
     
     time.sleep(out["t_s"]*2)
