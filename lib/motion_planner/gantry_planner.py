@@ -190,22 +190,140 @@ class LinearGantryPlanner:
         return out, True
 
 
+
+class CubicGantryPlanner(LinearGantryPlanner):
+    """
+    position: mm
+    velocity: mm/s
+    acceleration:mm/s2
+    duration: seconds
+    """
+
+    def __init__(self, *args, sample_period=0.05, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not np.isfinite(sample_period) or sample_period <=0:
+            raise ValueError("sample_period mist be >0")
+
+        self.sample_period = float(sample_period)
+
+    @standby_gaurd
+    def move_to(self, target_pose, duration, bypass_limits=False):
+
+        if not np.isfinite(duration) or duration <= 0:
+            raise ValueError("duration must be >0")
+
+        if not np.isfinite(self.max_speed) or self.max_speed <= 0:
+            raise ValueError("max_speed must be >0")
+
+        target_pose = np.asarray(target_pose, dtype=float).reshape(3,)
+
+        if not np.all(np.isfinite(target_pose)):
+            raise ValueError("target_pose must be finite")
+
+        if not bypass_limits:
+            target_pose = np.asarray(self._evaluate_limits(target_pose), dtype=float)
+
+        start_pose = self.curr_pose.copy()
+        delta_x = target_pose - start_pose
+        distance = float(np.linalg.norm(delta_x))
+
+        if distance< 1e-9:
+            return None
+
+        min_duration = 1.5 * distance/ self.max_speed
+
+        T = max(float(duration), min_duration)
+
+        #sampling the cubic trajectory
+        n = max(1, int(np.ceil(T / self.sample_period)))
+        times = np.linspace(0.0, T, n+1)
+
+        s = times / T
+
+        blend = 3.0 * s**2 - 2.0 * s**3
+
+        poses = (start_pose[None,:] + blend[:, None] * delta_x[None, :])
+
+        # convert cartesion displacement to joint revolutions
+
+        delta_poses = np.diff(poses, axis=0)
+        delta_qs = (self.INVERSE_JACOBIAN @ delta_poses.T).T
+
+        commands = []
+
+        for i, delta_q in enumerate(delta_qs):
+            dt = float(times[i+1] - times[i])
+            q_dot = np.abs(delta_q /dt) *60
+            commands.append({
+                "action": "move_joints_revs",
+                "target_pose": {
+                    "x" : float(poses[i+1, 0]),
+                    "y" : float(poses[i+1, 1]),
+                    "z" : float(poses[i+1, 2])
+                },
+                "delta_q" : {
+                    "x" : float(delta_q[0]),
+                    "y" : float(delta_q[1]),
+                    "z" : float(delta_q[2])
+                },
+                "q_dot" : {
+                    "x" : float(q_dot[0]),
+                    "y" : float(q_dot[1]),
+                    "z" : float(q_dot[2]),
+                },
+                "t_s": dt,
+                "distance": float(np.linalg.norm(delta_poses[i]))
+            })
+
+        self.curr_pose = target_pose.copy()
+
+        return  {
+            "action": "move_trajectory",
+            "trajectory_type": "cubic",
+            "requested_duration_s": float(duration),
+            "t_s": float(T),
+            "sample_period_s": float(T / n),
+            "distance": distance,
+            "target_pose": {
+                "x": float(target_pose[0]),
+                "y": float(target_pose[1]),
+                "z": float(target_pose[2])
+            },
+            "commands": commands
+        }
+        
+
 if __name__ == "__main__": 
-    platform = LinearGantryPlanner(limits= {'x':120, 'y':120, 'z':120}, #in mm dict: [x:x_limit, y:y_limit, z:z_limit]
+
+    platform = CubicGantryPlanner(limits= {'x':120, 'y':120, 'z':120}, #in mm dict: [x:x_limit, y:y_limit, z:z_limit]
                         home_dirs={'x':-1, 'y':1, 'z':1}, #dict: [x:x_home_dir, y:y_home_dir, z:z_home_dir]
                         mm_per_revs={'x':64, 'y':64, 'z':8}, #dict: [x:x_mm_per_rev, ....]
                         default_home_pose={'x':0, 'y':0, 'z':0}, # in mm dict,list, or nparray: [x_default_home, ....]
-                        max_speed=100 # mm/s
+                        max_speed=100, # mm/s
+                        sample_period=0.05
                         )
     
-    platform.load_motion_routine([{"v":50,"x":100,"y":100,"z":50},{"v":50,"x":0,"y":0,"z":0}])
+    trajectory = platform.move_to([300, 0, 0], duration=2.0)
+    print(trajectory["t_s"])          # 4.5 seconds
+    print(trajectory["commands"]) # 90 segments
 
 
-    while (res:=platform.next())[1]:
+    # platform = LinearGantryPlanner(limits= {'x':120, 'y':120, 'z':120}, #in mm dict: [x:x_limit, y:y_limit, z:z_limit]
+    #                     home_dirs={'x':-1, 'y':1, 'z':1}, #dict: [x:x_home_dir, y:y_home_dir, z:z_home_dir]
+    #                     mm_per_revs={'x':64, 'y':64, 'z':8}, #dict: [x:x_mm_per_rev, ....]
+    #                     default_home_pose={'x':0, 'y':0, 'z':0}, # in mm dict,list, or nparray: [x_default_home, ....]
+    #                     max_speed=100 # mm/s
+    #                     )
+    
+    # platform.load_motion_routine([{"v":50,"x":100,"y":100,"z":50},{"v":50,"x":0,"y":0,"z":0}])
 
-        out =res[0]
-        sleep_time = out['t_s']*2
-        print(out)
-        print(sleep_time)
-        sleep(sleep_time)
-        print(platform.get_current_pose())
+
+    # while (res:=platform.next())[1]:
+
+    #     out =res[0]
+    #     sleep_time = out['t_s']*2
+    #     print(out)
+    #     print(sleep_time)
+    #     sleep(sleep_time)
+    #     print(platform.get_current_pose())
